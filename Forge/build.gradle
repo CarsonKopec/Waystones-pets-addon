@@ -83,7 +83,6 @@ dependencies {
         changing = balm_version.endsWith("SNAPSHOT")
     }
     implementation fg.deobf("net.blay09.mods:waystones-forge:${waystones_version}")
-    implementation 'com.google.code.gson:gson:2.8.6'
     compileOnly project(":Common")
 }
 
@@ -108,12 +107,3 @@ processResources {
 
 
 jar.finalizedBy('reobfJar')
-
-
-
-
-configurations.all {
-    resolutionStrategy {
-        force 'com.google.code.gson:gson:2.8.6'
-    }
-}
