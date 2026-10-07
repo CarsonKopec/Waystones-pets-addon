@@ -20,6 +20,9 @@
     "entrypoints": {
       "main": [
         "com.github.imagineforgee.waystonespetsaddon.Waystonespetsaddon"
+      ],
+      "client": [
+        "com.github.imagineforgee.waystonespetsaddon.client.WaystonespetsaddonClient"
       ]
     },
 
@@ -29,7 +32,8 @@
     "minecraft": "${minecraft_version}",
     "java": ">=17",
     "balm-fabric": "*",
-    "waystones": "*"
+    "waystones": "*",
+    "forgeconfigapiport": "*"
   }
   }
   

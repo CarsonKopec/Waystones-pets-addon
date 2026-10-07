@@ -1,0 +1,17 @@
+{
+  "gui.waystonespetsaddon.pets_button": "Pets",
+  "gui.waystonespetsaddon.pets_button.tooltip": "Choose which pets teleport with you",
+  "gui.waystonespetsaddon.pet_selection": "Pets",
+  "gui.waystonespetsaddon.pet_selection.subtitle": "Your pets within %s blocks. Up to %s teleport with you.",
+  "gui.waystonespetsaddon.loading": "Looking for your pets...",
+  "gui.waystonespetsaddon.no_response": "The server didn't answer. Is Waystones Pets Addon installed on the server?",
+  "gui.waystonespetsaddon.no_pets": "None of your pets are close enough to teleport with you.",
+  "gui.waystonespetsaddon.follows": "Follows",
+  "gui.waystonespetsaddon.follows.tooltip": "Teleports with you when you use a waystone.",
+  "gui.waystonespetsaddon.stays": "Stays",
+  "gui.waystonespetsaddon.stays.tooltip": "Sits down and stays here when you use a waystone.",
+  "gui.waystonespetsaddon.block_away": "%s block away",
+  "gui.waystonespetsaddon.blocks_away": "%s blocks away",
+  "gui.waystonespetsaddon.sitting": "Sitting",
+  "gui.waystonespetsaddon.sitting_stays": "Sitting, won't teleport"
+}

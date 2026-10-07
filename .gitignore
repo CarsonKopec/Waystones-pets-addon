@@ -22,3 +22,6 @@ build
 # other
 eclipse
 run
+
+# publishing credentials
+env

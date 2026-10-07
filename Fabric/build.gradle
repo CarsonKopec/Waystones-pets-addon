@@ -47,7 +47,7 @@ dependencies {
     }
     implementation 'com.electronwill.night-config:core:3.6.5'
     implementation 'com.electronwill.night-config:toml:3.6.5'
-    // modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
+    modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
     implementation project(":Common")
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 
@@ -60,6 +60,8 @@ loom {
             setConfigName("Fabric Client")
             ideConfigGenerated(true)
             runDir("run")
+            // Loom picks a random name each launch, which changes the player's UUID and orphans tamed pets.
+            programArgs("--username", "Dev")
         }
         server {
             server()
