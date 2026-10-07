@@ -1,39 +1,33 @@
 plugins {
+    id 'idea'
     id 'java'
-    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
     id 'maven-publish'
+    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
 }
 
-archivesBaseName = "${mod_name}-common-${minecraft_version}"
+base {
+    archivesName = "${mod_name}-common-${minecraft_version}"
+}
 
 minecraft {
     version(minecraft_version)
 }
 
+repositories {
+    maven { url "https://repo.spongepowered.org/repository/maven-public/" }
+    maven { url "https://maven.minecraftforge.net" }
+    maven { url "https://maven.twelveiterations.com/repository/maven-public/" }
+}
+
 dependencies {
-     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
-    implementation 'com.google.code.gson:gson:2.8.6'
-     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
-        compileOnly("net.blay09.mods:balm-common:$balm_version") {
-            exclude(group: "net.blay09.mods", module: "shared-bridge")
-            changing = balm_version.endsWith("SNAPSHOT")
-        }
+    compileOnly "org.spongepowered:mixin:$mixin_version"
+    compileOnly("net.blay09.mods:balm-common:$balm_version") {
+        exclude(group: "net.blay09.mods", module: "shared-bridge")
+        changing = balm_version.endsWith("SNAPSHOT")
+    }
 
     implementation "net.blay09.mods:waystones-common:${waystones_version}"
 }
 
-processResources {
+sourceSets.main.resources.srcDir('src/generated/resources')
 
-    def buildProps = project.properties.clone()
-
-    filesMatching(['pack.mcmeta']) {
-
-        expand buildProps
-    }
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'com.google.code.gson:gson:2.8.6'
-    }
-}

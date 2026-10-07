@@ -1,10 +1,10 @@
 plugins {
-    id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '6.0.35'
-    id 'net.darkhax.curseforgegradle' version '1.1.26'
-    id "com.modrinth.minotaur" version "2.+"
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin'
+    id 'net.darkhax.curseforgegradle'
+    id "com.modrinth.minotaur"
 }
 
 version = version
@@ -110,44 +110,7 @@ processResources {
 jar.finalizedBy('reobfJar')
 
 
-tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
-    dependsOn 'build'
-    description = 'Publishes the Forge build to CurseForge.'
-    group = 'publishing'
 
-    apiToken = env.CURSEFORGE_TOKEN.value ?: "none"
-
-    def projectId = env.CURSEFORGE_PROJECT_ID.value
-    onlyIf {
-        projectId != null
-    }
-
-    if (projectId) {
-        def mainFile = upload(projectId, file("${project.buildDir}/libs/${archivesBaseName}.jar"))
-        mainFile.changelog = rootProject.file('CHANGELOG.md').text
-        mainFile.addModLoader("Forge")
-        mainFile.addRequirement("balm")
-        mainFile.addRequirement("waystones")
-        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it) }
-        mainFile.releaseType = release_type
-    }
-}
-
-modrinth {
-    token = env.MODRINTH_TOKEN.value
-    projectId = env.MODRINTH_PROJECT_ID.value
-    versionName = archivesBaseName
-    versionNumber = mod_version
-    versionType = release_type
-    uploadFile = file("${project.buildDir}/libs/${archivesBaseName}.jar")
-    gameVersions = minecraft_version.split(',').collect { it.trim() }
-    loaders = ["forge"]
-    dependencies {
-        required.project "MBAkmtvl"
-        required.project "LOpKHB2A"
-    }
-    changelog = rootProject.file('CHANGELOG.md').text
-}
 
 configurations.all {
     resolutionStrategy {
