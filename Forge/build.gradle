@@ -83,7 +83,6 @@ dependencies {
         changing = balm_version.endsWith("SNAPSHOT")
     }
     implementation fg.deobf("net.blay09.mods:waystones-forge:${waystones_version}")
-    implementation 'com.google.code.gson:gson:2.8.6'
     compileOnly project(":Common")
 }
 
@@ -147,10 +146,4 @@ modrinth {
         required.project "LOpKHB2A"
     }
     changelog = rootProject.file('CHANGELOG.md').text
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'com.google.code.gson:gson:2.8.6'
-    }
 }
