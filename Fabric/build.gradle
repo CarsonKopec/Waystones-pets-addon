@@ -122,42 +122,46 @@ configurations.all {
 }
 
 
-//tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
-//    dependsOn 'build'
-//    description = 'Publishes the Fabric build to CurseForge.'
-//    group = 'publishing'
-//
-//    apiToken = env.CURSEFORGE_TOKEN.value ?: "none"
-//
-//    def projectId = env.CURSEFORGE_PROJECT_ID.value
-//    onlyIf {
-//        projectId != null
-//    }
-//
-//    if (projectId) {
-//        def mainFile = upload(projectId, file("${project.buildDir}/libs/${archivesBaseName}.jar"))
-//        mainFile.changelog = rootProject.file('CHANGELOG.md').text
-//        mainFile.addModLoader("Fabric")
-//        mainFile.addRequirement("balm-fabric")
-//        mainFile.addRequirement("waystones-fabric")
-//        mainFile.addRequirement("forge-config-api-port-fabric")
-//        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it) }
-//        mainFile.releaseType = release_type
-//    }
-//}
-//modrinth {
-//    token = env.MODRINTH_TOKEN.value
-//    projectId = env.MODRINTH_PROJECT_ID.value
-//    versionName = archivesBaseName
-//    versionNumber = mod_version
-//    versionType = release_type
-//    uploadFile = file("${project.buildDir}/libs/${archivesBaseName}.jar")
-//    gameVersions = minecraft_version.split(',').collect { it.trim() }
-//    loaders = ["fabric"]
-//    dependencies {
-//        required.project "MBAkmtvl"
-//        required.project "LOpKHB2A"
-//        required.project "ohNO6lps"
-//    }
-//    changelog = rootProject.file('CHANGELOG.md').text
-//}
+tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    dependsOn remapJar
+    description = 'Publishes the Fabric build to CurseForge.'
+    group = 'publishing'
+
+    apiToken = secret('CURSEFORGE_TOKEN')
+    def projectId = secret('CURSEFORGE_PROJECT_ID')
+    doFirst {
+        if (!apiToken || !projectId) {
+            throw new GradleException('Set CURSEFORGE_TOKEN and CURSEFORGE_PROJECT_ID in .env to publish to CurseForge.')
+        }
+    }
+
+    if (projectId) {
+        def mainFile = upload(projectId, remapJar.archiveFile.get().asFile)
+        mainFile.changelog = rootProject.file('CHANGELOG.md').text
+        mainFile.addModLoader("Fabric")
+        mainFile.addRequirement("fabric-api")
+        mainFile.addRequirement("balm-fabric")
+        mainFile.addRequirement("waystones-fabric")
+        mainFile.addRequirement("forge-config-api-port-fabric")
+        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        mainFile.releaseType = release_type
+    }
+}
+
+modrinth {
+    token = secret('MODRINTH_TOKEN')
+    projectId = secret('MODRINTH_PROJECT_ID')
+    versionName = base.archivesName.get()
+    versionNumber = mod_version
+    versionType = release_type
+    uploadFile = remapJar
+    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    loaders = ["fabric"]
+    dependencies {
+        required.project "P7dR8mSH" // Fabric API
+        required.project "MBAkmtvl" // Balm
+        required.project "LOpKHB2A" // Waystones
+        required.project "ohNO6lps" // Forge Config API Port
+    }
+    changelog = rootProject.file('CHANGELOG.md').text
+}

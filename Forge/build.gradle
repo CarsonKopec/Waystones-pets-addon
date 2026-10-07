@@ -107,3 +107,48 @@ processResources {
 
 
 jar.finalizedBy('reobfJar')
+
+// reobfJar rewrites the jar in place, so upload only once it has run.
+tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    dependsOn 'reobfJar'
+    description = 'Publishes the Forge build to CurseForge.'
+    group = 'publishing'
+
+    apiToken = secret('CURSEFORGE_TOKEN')
+    def projectId = secret('CURSEFORGE_PROJECT_ID')
+    doFirst {
+        if (!apiToken || !projectId) {
+            throw new GradleException('Set CURSEFORGE_TOKEN and CURSEFORGE_PROJECT_ID in .env to publish to CurseForge.')
+        }
+    }
+
+    if (projectId) {
+        def mainFile = upload(projectId, jar.archiveFile.get().asFile)
+        mainFile.changelog = rootProject.file('CHANGELOG.md').text
+        mainFile.addModLoader("Forge")
+        mainFile.addRequirement("balm")
+        mainFile.addRequirement("waystones")
+        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        mainFile.releaseType = release_type
+    }
+}
+
+modrinth {
+    token = secret('MODRINTH_TOKEN')
+    projectId = secret('MODRINTH_PROJECT_ID')
+    versionName = base.archivesName.get()
+    versionNumber = mod_version
+    versionType = release_type
+    uploadFile = jar.archiveFile
+    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    loaders = ["forge"]
+    dependencies {
+        required.project "MBAkmtvl" // Balm
+        required.project "LOpKHB2A" // Waystones
+    }
+    changelog = rootProject.file('CHANGELOG.md').text
+}
+
+tasks.named('modrinth') {
+    dependsOn 'reobfJar'
+}

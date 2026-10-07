@@ -7,6 +7,14 @@ plugins {
     id "com.modrinth.minotaur" version "2.+" apply(false)
 }
 
+// Publishing credentials (CURSEFORGE_TOKEN, CURSEFORGE_PROJECT_ID, MODRINTH_TOKEN, MODRINTH_PROJECT_ID) come from
+// environment variables or from the git-ignored .env file next to this one, one KEY=value per line.
+def dotEnv = new Properties()
+if (file('.env').exists()) {
+    file('.env').withReader('UTF-8') { dotEnv.load(it) }
+}
+ext.secret = { String key -> System.getenv(key) ?: dotEnv.getProperty(key)?.trim() }
+
 subprojects {
     
     apply plugin: 'java'
