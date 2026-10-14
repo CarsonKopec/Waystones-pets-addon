@@ -26,7 +26,7 @@ dependencies {
         changing = balm_version.endsWith("SNAPSHOT")
     }
 
-    implementation "net.blay09.mods:waystones-common:${waystones_version}"
+    compileOnly "net.blay09.mods:waystones-common:${waystones_version}"
 }
 
 sourceSets.main.resources.srcDir('src/generated/resources')

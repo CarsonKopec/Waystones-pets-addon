@@ -34,7 +34,6 @@ minecraft {
             mods {
                 modClientRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
                 }
             }
         }
@@ -48,7 +47,6 @@ minecraft {
             mods {
                 modServerRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
                 }
             }
         }
@@ -63,7 +61,6 @@ minecraft {
             mods {
                 modDataRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
                 }
             }
         }
@@ -71,6 +68,15 @@ minecraft {
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
+
+// Forge 49+ launches mods as Java modules and only sees a mod's classes when they sit in the same folder as its
+// resources, so build both into one directory (as in Forge's own MDK). Common's sources and resources are already
+// compiled into this project, so the runs only need this project's output.
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}
 
 repositories {
     maven { url 'https://maven.minecraftforge.net/' }

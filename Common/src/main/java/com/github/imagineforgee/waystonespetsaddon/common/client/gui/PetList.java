@@ -36,7 +36,7 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
 
     public PetList(Minecraft minecraft, int width, int height, int top, int bottom) {
         // Selection lists pass rows 4px less than the item height, leaving a gap between them.
-        super(minecraft, width, height, top, bottom, ROW_HEIGHT + 4);
+        super(minecraft, width, bottom - top, top, ROW_HEIGHT + 4);
         setRenderBackground(false);
     }
 
