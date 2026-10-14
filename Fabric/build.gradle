@@ -47,7 +47,6 @@ dependencies {
     }
     implementation 'com.electronwill.night-config:core:3.6.5'
     implementation 'com.electronwill.night-config:toml:3.6.5'
-    modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
     implementation project(":Common")
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 
@@ -79,7 +78,9 @@ afterEvaluate {
 processResources {
     from(project(":Common").sourceSets.main.resources)
 
-    var replaceProperties = [minecraft_version   : minecraft_version, fabric_loader_version: fabric_loader_version,
+    def gameVersions = fabric_game_versions.split(',').collect { it.trim() }
+    var replaceProperties = [fabric_minecraft_range: ">=${gameVersions.first()} <=${gameVersions.last()}",
+                             minecraft_version   : minecraft_version, fabric_loader_version: fabric_loader_version,
                              fabric_api_version: fabric_api_version, mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
                              mod_version: mod_version, mod_authors: mod_authors, mod_description: mod_description,
     ]
@@ -142,8 +143,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         mainFile.addRequirement("fabric-api")
         mainFile.addRequirement("balm-fabric")
         mainFile.addRequirement("waystones-fabric")
-        mainFile.addRequirement("forge-config-api-port")
-        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        fabric_game_versions.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
         // CurseForge requires an environment; the mod runs on both sides.
         mainFile.addGameVersion("Client", "Server")
         mainFile.releaseType = release_type
@@ -157,13 +157,12 @@ modrinth {
     versionNumber = mod_version
     versionType = release_type
     uploadFile = remapJar
-    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    gameVersions = fabric_game_versions.split(',').collect { it.trim() }
     loaders = ["fabric"]
     dependencies {
         required.project "P7dR8mSH" // Fabric API
         required.project "MBAkmtvl" // Balm
         required.project "LOpKHB2A" // Waystones
-        required.project "ohNO6lps" // Forge Config API Port
     }
     changelog = rootProject.file('CHANGELOG.md').text
 }

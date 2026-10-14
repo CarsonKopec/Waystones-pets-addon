@@ -29,11 +29,10 @@
   "depends": {
     "fabricloader": "${fabric_loader_version}",
     "fabric": "*",
-    "minecraft": "${minecraft_version}",
+    "minecraft": "${fabric_minecraft_range}",
     "java": ">=17",
     "balm-fabric": "*",
-    "waystones": "*",
-    "forgeconfigapiport": "*"
+    "waystones": "*"
   }
   }
   

@@ -1,66 +1,55 @@
 package com.github.imagineforgee.waystonespetsaddon;
 
+import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
-import org.apache.commons.lang3.tuple.Pair;
+import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.balm.api.config.BalmConfigData;
+import net.blay09.mods.balm.api.config.Comment;
+import net.blay09.mods.balm.api.config.Config;
+import net.blay09.mods.balm.api.event.ConfigReloadedEvent;
+import net.minecraft.util.Mth;
 
-public class FabricConfig {
-    public static final CommonConfig COMMON;
-    public static final ForgeConfigSpec COMMON_SPEC;
+/**
+ * Fabric config, stored through Balm (as Waystones does) rather than Forge Config API Port, which has no build for
+ * 1.20.3. Same settings, defaults and limits as the Forge and NeoForge configs.
+ */
+@Config(Constants.MOD_ID)
+public class FabricConfig implements BalmConfigData {
+    @Comment("If true, sitting pets will be teleported.")
+    public boolean teleportSittingPets = false;
 
-    static {
-        Pair<CommonConfig, ForgeConfigSpec> pair = new ForgeConfigSpec.Builder().configure(CommonConfig::new);
-        COMMON = pair.getLeft();
-        COMMON_SPEC = pair.getRight();
+    @Comment("Force pets to stand up before teleporting, even if they are sitting. Only applies if teleportSittingPets is true.")
+    public boolean forceUnsitPets = false;
+
+    @Comment("The radius (in blocks) around the player to detect tamed pets. Range: 1.0 ~ 100.0")
+    public double teleportRadius = 10.0;
+
+    @Comment("Maximum number of pets to teleport at once. Range: 1 ~ 1000")
+    public int maxPetsToTeleport = 5;
+
+    @Comment("Randomize the offset of teleported pets to avoid stacking.")
+    public boolean randomizeTeleportOffset = true;
+
+    @Comment("Delay (in ticks) before pets are teleported. 0 = instant. Range: 0 ~ 200")
+    public int teleportDelayTicks = 0;
+
+    public static void initialize() {
+        // Only the server uses these settings, and the pet screen gets them from the server, so no client sync.
+        Balm.getConfig().registerConfig(FabricConfig.class, null);
+        Balm.getEvents().onEvent(ConfigReloadedEvent.class, event -> applyToCommon());
+        applyToCommon();
     }
 
-    public static class CommonConfig {
-        public final ForgeConfigSpec.IntValue maxPetsToTeleport;
-        public final ForgeConfigSpec.DoubleValue teleportRadius;
-        public final ForgeConfigSpec.BooleanValue teleportSittingPets;
-        public final ForgeConfigSpec.BooleanValue forceUnsitPets;
-        public final ForgeConfigSpec.BooleanValue randomizeTeleportOffset;
-        public final ForgeConfigSpec.IntValue teleportDelayTicks;
-
-        public CommonConfig(ForgeConfigSpec.Builder builder) {
-            builder.push("Pet Teleport Settings");
-
-            teleportSittingPets = builder
-                    .comment("If true, sitting pets will be teleported.")
-                    .define("teleportSittingPets", false);
-
-            forceUnsitPets = builder
-                    .comment("Force pets to stand up before teleporting, even if they are sitting. Only applies if teleportSittingPets is true.")
-                    .define("forceUnsitPets", false);
-
-            teleportRadius = builder
-                    .comment("The radius (in blocks) around the player to detect tamed pets.")
-                    .defineInRange("teleportRadius", 10.0, 1.0, 100.0);
-
-            maxPetsToTeleport = builder
-                    .comment("Maximum number of pets to teleport at once.")
-                    .defineInRange("maxPetsToTeleport", 5, 1, 1000);
-
-            randomizeTeleportOffset = builder
-                    .comment("Randomize the offset of teleported pets to avoid stacking.")
-                    .define("randomizeTeleportOffset", true);
-
-            teleportDelayTicks = builder
-                    .comment("Delay (in ticks) before pets are teleported. 0 = instant.")
-                    .defineInRange("teleportDelayTicks", 0, 0, 200);
-
-            builder.pop();
-        }
-    }
-
-    public static void applyToCommon() {
+    // Balm doesn't enforce ranges, so clamp to the same limits the Forge config spec enforces.
+    private static void applyToCommon() {
+        FabricConfig config = Balm.getConfig().getActive(FabricConfig.class);
         PetTeleportConfig.ConfigValues values = new PetTeleportConfig.ConfigValues();
-        values.maxPetsToTeleport = COMMON.maxPetsToTeleport.get();
-        values.teleportRadius = COMMON.teleportRadius.get();
-        values.teleportSittingPets = COMMON.teleportSittingPets.get();
-        values.forceUnsitPets = COMMON.forceUnsitPets.get();
-        values.randomizeTeleportOffset = COMMON.randomizeTeleportOffset.get();
-        values.teleportDelayTicks = COMMON.teleportDelayTicks.get();
+        values.teleportSittingPets = config.teleportSittingPets;
+        values.forceUnsitPets = config.forceUnsitPets;
+        values.teleportRadius = Mth.clamp(config.teleportRadius, 1.0, 100.0);
+        values.maxPetsToTeleport = Mth.clamp(config.maxPetsToTeleport, 1, 1000);
+        values.randomizeTeleportOffset = config.randomizeTeleportOffset;
+        values.teleportDelayTicks = Mth.clamp(config.teleportDelayTicks, 0, 200);
         PetTeleportConfig.values = values;
     }
 }
