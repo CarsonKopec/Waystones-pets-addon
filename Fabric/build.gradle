@@ -142,8 +142,10 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         mainFile.addRequirement("fabric-api")
         mainFile.addRequirement("balm-fabric")
         mainFile.addRequirement("waystones-fabric")
-        mainFile.addRequirement("forge-config-api-port-fabric")
+        mainFile.addRequirement("forge-config-api-port")
         minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        // CurseForge requires an environment; the mod runs on both sides.
+        mainFile.addGameVersion("Client", "Server")
         mainFile.releaseType = release_type
     }
 }
