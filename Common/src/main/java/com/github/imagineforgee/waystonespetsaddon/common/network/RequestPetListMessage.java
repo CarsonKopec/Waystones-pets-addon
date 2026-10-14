@@ -4,17 +4,25 @@ import com.github.imagineforgee.waystonespetsaddon.common.PetFollowData;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
 import net.blay09.mods.balm.api.Balm;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
 
 /** Sent by the client when the pet selection screen opens. */
-public class RequestPetListMessage {
-    public static void encode(RequestPetListMessage message, FriendlyByteBuf buf) {
+public record RequestPetListMessage() implements CustomPacketPayload {
+    public static final Type<RequestPetListMessage> TYPE = ModNetworking.type("request_pet_list");
+
+    @Override
+    public Type<RequestPetListMessage> type() {
+        return TYPE;
     }
 
-    public static RequestPetListMessage decode(FriendlyByteBuf buf) {
+    public static void encode(RegistryFriendlyByteBuf buf, RequestPetListMessage message) {
+    }
+
+    public static RequestPetListMessage decode(RegistryFriendlyByteBuf buf) {
         return new RequestPetListMessage();
     }
 

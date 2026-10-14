@@ -16,6 +16,8 @@ base {
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
+    // Forge 50 (1.20.6) runs on Mojang names, so the jar ships as compiled instead of being reobfuscated to SRG.
+    reobf = false
     
     if (project.hasProperty('forge_ats_enabled') && project.findProperty('forge_ats_enabled').toBoolean()) {
         // This location is hardcoded in Forge and can not be changed.
@@ -85,10 +87,10 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation fg.deobf("net.blay09.mods:balm-forge:${balm_version}") {
+    implementation("net.blay09.mods:balm-forge:${balm_version}") {
         changing = balm_version.endsWith("SNAPSHOT")
     }
-    implementation fg.deobf("net.blay09.mods:waystones-forge:${waystones_version}")
+    implementation "net.blay09.mods:waystones-forge:${waystones_version}"
     compileOnly project(":Common")
 }
 
@@ -112,11 +114,9 @@ processResources {
 }
 
 
-jar.finalizedBy('reobfJar')
 
-// reobfJar rewrites the jar in place, so upload only once it has run.
 tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
-    dependsOn 'reobfJar'
+    dependsOn 'jar'
     description = 'Publishes the Forge build to CurseForge.'
     group = 'publishing'
 
@@ -158,5 +158,5 @@ modrinth {
 }
 
 tasks.named('modrinth') {
-    dependsOn 'reobfJar'
+    dependsOn 'jar'
 }

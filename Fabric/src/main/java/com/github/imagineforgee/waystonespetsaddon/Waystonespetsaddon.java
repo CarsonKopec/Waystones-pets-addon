@@ -5,9 +5,10 @@ import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import com.github.imagineforgee.waystonespetsaddon.common.api.PlatformAbstractions;
 import com.github.imagineforgee.waystonespetsaddon.events.FabricTickHandler;
 import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.balm.api.EmptyLoadContext;
 import net.fabricmc.api.ModInitializer;
 
-import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
+import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeConfigRegistry;
 import net.minecraftforge.fml.config.ModConfig;
 
 public class Waystonespetsaddon implements ModInitializer {
@@ -15,7 +16,7 @@ public class Waystonespetsaddon implements ModInitializer {
     @Override
     public void onInitialize() {
         ForgeConfigRegistry.INSTANCE.register(Constants.MOD_ID, ModConfig.Type.COMMON, FabricConfig.COMMON_SPEC);
-        Balm.initialize(Constants.MOD_ID, Common::initialize);
+        Balm.initialize(Constants.MOD_ID, EmptyLoadContext.INSTANCE, Common::initialize);
         FabricConfig.applyToCommon();
         PlatformAbstractions.delayedTaskFactory = DelayedTaskImpl::new;
         FabricTickHandler.register();

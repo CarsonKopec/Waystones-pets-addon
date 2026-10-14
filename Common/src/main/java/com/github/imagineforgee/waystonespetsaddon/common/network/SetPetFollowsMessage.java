@@ -2,7 +2,8 @@ package com.github.imagineforgee.waystonespetsaddon.common.network;
 
 import com.github.imagineforgee.waystonespetsaddon.common.PetFollowData;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.TamableAnimal;
@@ -10,14 +11,20 @@ import net.minecraft.world.entity.TamableAnimal;
 import java.util.UUID;
 
 /** Sent by the client when the player toggles whether a pet follows them. */
-public record SetPetFollowsMessage(UUID petId, boolean follows) {
+public record SetPetFollowsMessage(UUID petId, boolean follows) implements CustomPacketPayload {
+    public static final Type<SetPetFollowsMessage> TYPE = ModNetworking.type("set_pet_follows");
 
-    public static void encode(SetPetFollowsMessage message, FriendlyByteBuf buf) {
+    @Override
+    public Type<SetPetFollowsMessage> type() {
+        return TYPE;
+    }
+
+    public static void encode(RegistryFriendlyByteBuf buf, SetPetFollowsMessage message) {
         buf.writeUUID(message.petId);
         buf.writeBoolean(message.follows);
     }
 
-    public static SetPetFollowsMessage decode(FriendlyByteBuf buf) {
+    public static SetPetFollowsMessage decode(RegistryFriendlyByteBuf buf) {
         return new SetPetFollowsMessage(buf.readUUID(), buf.readBoolean());
     }
 
