@@ -42,9 +42,6 @@ dependencies {
         transitive = false
         changing = balm_version.endsWith("SNAPSHOT")
     }
-    modApi("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
-        exclude group: "net.fabricmc", module: "fabric-loader"
-    }
     implementation 'com.electronwill.night-config:core:3.6.5'
     implementation 'com.electronwill.night-config:toml:3.6.5'
     modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
@@ -132,7 +129,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId project.group
-            artifactId project.archivesBaseName
+            artifactId base.archivesName.get()
             version project.version
             from components.java
         }

@@ -1,8 +1,8 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT' apply(false)
-    // id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT' apply(false) // this causes ForgeGradle to fail in reobf
-    id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.7" // this is required for VanillaGradle and NeoForge to exist in harmony
-    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT' apply(false)
+    id 'fabric-loom' version '1.19-SNAPSHOT' apply(false)
+    id 'net.minecraftforge.gradle' version '7.0.40' apply(false)
+    // Builds the NeoForge jar, and compiles Common against plain Minecraft.
+    id 'net.neoforged.moddev' version '2.0.148' apply(false)
     id 'net.darkhax.curseforgegradle' version '1.1.18' apply(false)
     id "com.modrinth.minotaur" version "2.+" apply(false)
 }
@@ -53,9 +53,17 @@ subprojects {
         mavenCentral()
         maven {
             url "https://maven.twelveiterations.com/repository/maven-public/"
+            // Only Blay's own artifacts: this repository also proxies other mavens.
+            content {
+                includeGroup "net.blay09.mods"
+            }
         }
         maven {
             url "https://repo.spongepowered.org/repository/maven-public/"
+            // Only Mixin itself: this repository also proxies Fabric's maven, with a stale Fabric API POM.
+            content {
+                includeGroup "org.spongepowered"
+            }
         }
         maven {
             url "https://maven.minecraftforge.net"

@@ -1,5 +1,5 @@
 0.1.1
-- Fabric: works with any Fabric Loader from 0.15.11 on. 0.1.0 only loaded on Fabric Loader 0.17.2.
+- Ported to Minecraft 1.21.1, for Fabric, Forge and NeoForge.
 
 0.1.0
 - Ported to Minecraft 1.20.4 (the Fabric build also runs on 1.20.3) and 1.20.6, for Fabric, Forge and NeoForge.

@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,7 +30,7 @@ public class ForgeGameTests extends PetTeleportGameTests {
 
     static {
         // Static, because the test registry constructs this class again later, outside mod loading.
-        MinecraftForge.EVENT_BUS.addListener(ForgeGameTests::loadServerConfigs);
+        MinecraftForge.EVENT_BUS.addListener(ForgeGameTests::startLikeARealServer);
     }
 
     @Override
@@ -39,11 +40,12 @@ public class ForgeGameTests extends PetTeleportGameTests {
     }
 
     /**
-     * Forge's game test server skips the hook that loads server configs on a real server, so reading Forge's own
-     * server config (which it does whenever an entity errors) crashed the test server. This loads them the same way,
-     * before the first tick, and Forge unloads them as usual when the server stops.
+     * Forge's game test server skips the hooks a real server runs while starting, so this does their part before the
+     * first tick. Without server configs, reading Forge's own (which it does whenever an entity errors) crashed the
+     * test server; without the permission API, every Waystones teleport failed its permission check. Forge unloads the
+     * configs as usual when the server stops.
      */
-    private static void loadServerConfigs(ServerStartedEvent event) {
+    private static void startLikeARealServer(ServerStartedEvent event) {
         if (!(event.getServer() instanceof GameTestServer server)) {
             return;
         }
@@ -54,5 +56,7 @@ public class ForgeGameTests extends PetTeleportGameTests {
             throw new UncheckedIOException(e);
         }
         ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.SERVER, configDir);
+        // Sets up the permission API, which only accepts the call from Forge's own hook.
+        ServerLifecycleHooks.handleServerStarting(server);
     }
 }

@@ -1,8 +1,7 @@
 plugins {
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.spongepowered.mixin'
+    id 'net.minecraftforge.gradle'
     id 'net.darkhax.curseforgegradle'
     id "com.modrinth.minotaur"
 }
@@ -19,113 +18,66 @@ sourceSets {
     gametest {
         java.srcDir project(":Common").file("src/gametest/java")
         resources.srcDir project(":Common").file("src/gametest/resources")
-        compileClasspath += main.compileClasspath + main.output
-        runtimeClasspath += main.runtimeClasspath + main.output
+        compileClasspath += main.output
+        runtimeClasspath += main.output
     }
 }
 
+// ForgeGradle only makes run tasks for source sets that depend on Forge, so the test mod's source set inherits the
+// main dependencies. Its runs then load both the mod and the test mod from their classpath.
+configurations {
+    gametestImplementation.extendsFrom implementation
+    gametestCompileOnly.extendsFrom compileOnly
+    gametestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+// Forge 52 (1.21.1) runs on Mojang names, so the jar ships as compiled; ForgeGradle 7 no longer reobfuscates.
 minecraft {
     mappings channel: 'official', version: minecraft_version
-    // Forge 50 (1.20.6) runs on Mojang names, so the jar ships as compiled instead of being reobfuscated to SRG.
-    reobf = false
-    
-    if (project.hasProperty('forge_ats_enabled') && project.findProperty('forge_ats_enabled').toBoolean()) {
-        // This location is hardcoded in Forge and can not be changed.
-        // https://github.com/MinecraftForge/MinecraftForge/blob/be1698bb1554f9c8fa2f58e32b9ab70bc4385e60/fmlloader/src/main/java/net/minecraftforge/fml/loading/moddiscovery/ModFile.java#L123
-        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-        project.logger.debug('Forge Access Transformers are enabled for this project.')
-    }
 
     runs {
-        client {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            taskName 'Client'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modClientRun {
-                    source sourceSets.main
-                }
-            }
+        configureEach {
+            workingDir = layout.projectDirectory.dir('run')
+        }
+        register('client')
+        register('server') {
+            args '--nogui'
         }
 
-        server {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            taskName 'Server'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modServerRun {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        // ./gradlew :Forge:GameTestServer runs every game test on a headless server, then stops.
-        gameTestServer {
-            workingDirectory project.file('build/gametest')
-            ideaModule "${rootProject.name}.${project.name}.gametest"
-            taskName 'GameTestServer'
-            property 'forge.enabledGameTestNamespaces', mod_id
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modGameTestRun {
-                    source sourceSets.main
-                }
-                modGameTests {
-                    source sourceSets.gametest
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            taskName 'Data'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modDataRun {
-                    source sourceSets.main
-                }
-            }
+        // ./gradlew :Forge:runGametestGameTestServer runs every game test on a headless server, then stops.
+        register('gameTestServer') {
+            workingDir = layout.projectDirectory.dir('build/gametest')
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
     }
 }
 
 // Each game test run starts from a fresh world and config, so nothing left by a failed run, or by a run for another
 // Minecraft version, can affect it.
-tasks.matching { it.name == 'GameTestServer' }.configureEach {
+tasks.matching { it.name == 'runGametestGameTestServer' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
-
-// Forge 49+ launches mods as Java modules and only sees a mod's classes when they sit in the same folder as its
-// resources, so build both into one directory (as in Forge's own MDK). Common's sources and resources are already
-// compiled into this project, so the runs only need this project's output.
-sourceSets.each {
-    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-    it.output.resourcesDir = dir
-    it.java.destinationDirectory = dir
-}
-
 repositories {
-    maven { url 'https://maven.minecraftforge.net/' }
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
     maven { url "https://cursemaven.com" }
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation("net.blay09.mods:balm-forge:${balm_version}") {
-        changing = balm_version.endsWith("SNAPSHOT")
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    // Their POMs list Balm's common jar and libraries the mod jars already bundle; on Forge's module path those
+    // duplicate packages stop the game from starting.
+    implementation("net.blay09.mods:balm-forge:${balm_forge_version}") {
+        transitive = false
+        changing = balm_forge_version.endsWith("SNAPSHOT")
     }
-    implementation "net.blay09.mods:waystones-forge:${waystones_version}"
+    implementation("net.blay09.mods:waystones-forge:${waystones_version}") {
+        transitive = false
+    }
     compileOnly project(":Common")
 }
 

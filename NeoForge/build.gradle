@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'net.neoforged.gradle.userdev' version '7.0.165'
+    id 'net.neoforged.moddev'
     id 'net.darkhax.curseforgegradle'
     id "com.modrinth.minotaur"
 }
@@ -11,8 +11,7 @@ base {
     archivesName = "${mod_id}-neoforge-${mod_version}-${minecraft_version}"
 }
 
-// Game tests: Common's test sources plus the class that registers them. Only the game test run adds them to the mod,
-// so they never ship in the jar.
+// Game tests: Common's test sources plus a small test-only mod that registers them, kept out of the release jar.
 sourceSets {
     gametest {
         java.srcDir project(":Common").file("src/gametest/java")
@@ -22,43 +21,53 @@ sourceSets {
     }
 }
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
+neoForge {
+    version = neo_version
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+        "${mod_id}_gametest" {
+            sourceSet sourceSets.gametest
+        }
     }
 
-    client {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
+    runs {
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.console.level', 'debug'
+        }
 
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
-    }
+        client {
+            client()
+            loadedMods = [mods."${mod_id}"]
+        }
 
-    // ./gradlew :NeoForge:runGameTestServer runs every game test on a headless server, then stops.
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        modSource project.sourceSets.gametest
+        server {
+            server()
+            programArgument '--nogui'
+            loadedMods = [mods."${mod_id}"]
+        }
+
+        // ./gradlew :NeoForge:runGameTestServer runs every game test on a headless server, then stops.
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = project.file('build/gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
     }
 }
 
 // Each game test run starts from a fresh world and config, so nothing left by a failed run, or by a run for another
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
-    doFirst { project.delete(file('runs/gameTestServer/world'), file('runs/gameTestServer/config')) }
+    doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-repositories {
-    maven { url 'https://maven.neoforged.net/releases' }
-}
-
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
     implementation "net.blay09.mods:balm-neoforge:${balm_version}"
     implementation "net.blay09.mods:waystones-neoforge:${waystones_version}"
     compileOnly project(":Common")

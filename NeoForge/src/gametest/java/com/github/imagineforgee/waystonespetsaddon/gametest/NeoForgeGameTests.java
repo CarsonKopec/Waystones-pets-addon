@@ -11,6 +11,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
@@ -18,11 +19,14 @@ import java.util.Collection;
 import java.util.UUID;
 
 /**
- * Registers the shared game tests on NeoForge. The game test run adds this class to the mod, and NeoForge finds tests
- * through {@link GameTestHolder}, which it reads from the class declaring the generator, so it is declared again here.
+ * Test-only mod that registers the shared game tests on NeoForge. NeoForge finds tests through {@link GameTestHolder},
+ * which it reads from the class declaring the generator, so the generator is declared again here.
  */
+@Mod(NeoForgeGameTests.MOD_ID)
 @GameTestHolder(Constants.MOD_ID)
 public class NeoForgeGameTests extends PetTeleportGameTests {
+    public static final String MOD_ID = "waystonespetsaddon_gametest";
+
     static {
         // NeoForge only sends mod packets over connections that negotiated them, which vanilla's mock player never
         // does, so logging one in failed as soon as Balm synced Waystones' config to it.

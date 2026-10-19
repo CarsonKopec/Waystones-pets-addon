@@ -22,5 +22,8 @@ public class PetFollowData {
         } else {
             data.putBoolean(STAYS_KEY, true);
         }
+        // Balm 21 hands out a tag that isn't saved yet while the pet has no Balm data, and only takes it over on the
+        // next lookup once it holds something. Look it up again, so the choice is saved even if the world closes first.
+        Balm.getHooks().getPersistentData(pet);
     }
 }

@@ -19,6 +19,6 @@ public class ModNetworking {
     }
 
     static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {
-        return new CustomPacketPayload.Type<>(new ResourceLocation(Constants.MOD_ID, path));
+        return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, path));
     }
 }

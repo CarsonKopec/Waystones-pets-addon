@@ -28,13 +28,13 @@ side="BOTH"
 [[dependencies."${mod_id}"]]
 modId="waystones"
 type="required"
-versionRange="[17.0.0,)"
+versionRange="[21.1.0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies."${mod_id}"]]
 modId="balm"
 type="required"
-versionRange="[10.0.0,)"
+versionRange="[21.0.0,)"
 ordering="AFTER"
 side="BOTH"
