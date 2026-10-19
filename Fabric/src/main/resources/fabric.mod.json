@@ -29,9 +29,9 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_min}",
     "fabric": "*",
-    "minecraft": "${minecraft_version}",
+    "minecraft": "${fabric_minecraft_range}",
     "java": ">=21",
-    "balm": "*",
+    "balm-fabric": "*",
     "waystones": "*",
     "forgeconfigapiport": "*"
   }

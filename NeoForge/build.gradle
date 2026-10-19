@@ -68,8 +68,14 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    implementation "net.blay09.mods:balm-neoforge:${balm_version}"
-    implementation "net.blay09.mods:waystones-neoforge:${waystones_version}"
+    // Their POMs list Balm's common jar and optional integrations that aren't needed and aren't always published; the
+    // mod jars bundle what they do need.
+    implementation("net.blay09.mods:balm-neoforge:${balm_version}") {
+        transitive = false
+    }
+    implementation("net.blay09.mods:waystones-neoforge:${waystones_version}") {
+        transitive = false
+    }
     compileOnly project(":Common")
 }
 
@@ -82,9 +88,10 @@ processResources {
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var gameVersions = neoforge_game_versions.split(',').collect { it.trim() }
     var replaceProperties = [
             minecraft_version      : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
+            minecraft_version_range: "[${gameVersions.first()},${gameVersions.last()}]",
             neo_version            : neo_version,
             neo_version_range      : neo_version_range,
             neo_loader_version_range: neo_loader_version_range,
@@ -123,7 +130,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         mainFile.addModLoader("NeoForge")
         mainFile.addRequirement("balm")
         mainFile.addRequirement("waystones")
-        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        neoforge_game_versions.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
         // CurseForge requires an environment; the mod runs on both sides.
         mainFile.addGameVersion("Client", "Server")
         mainFile.releaseType = release_type
@@ -137,7 +144,7 @@ modrinth {
     versionNumber = mod_version
     versionType = release_type
     uploadFile = jar
-    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    gameVersions = neoforge_game_versions.split(',').collect { it.trim() }
     loaders = ["neoforge"]
     dependencies {
         required.project "MBAkmtvl" // Balm

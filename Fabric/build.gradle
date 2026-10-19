@@ -33,8 +33,10 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    // Its POM lists optional integrations (JEI, JourneyMap's networking...) that aren't needed and aren't always
+    // published; the Waystones jar bundles what it does need.
     modImplementation("net.blay09.mods:waystones-fabric:${waystones_version}") {
-        exclude group: "net.fabricmc", module: "fabric-loader"
+        transitive = false
     }
     modImplementation("net.blay09.mods:balm-fabric:${balm_version}") {
         exclude(group: "net.blay09.mods", module: "shared-bridge")
@@ -109,7 +111,9 @@ afterEvaluate {
 processResources {
     from(project(":Common").sourceSets.main.resources)
 
-    var replaceProperties = [minecraft_version   : minecraft_version, fabric_loader_version: fabric_loader_version, fabric_loader_min: fabric_loader_min,
+    def gameVersions = fabric_game_versions.split(',').collect { it.trim() }
+    var replaceProperties = [fabric_minecraft_range: ">=${gameVersions.first()} <=${gameVersions.last()}",
+                             minecraft_version   : minecraft_version, fabric_loader_version: fabric_loader_version, fabric_loader_min: fabric_loader_min,
                              fabric_api_version: fabric_api_version, mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
                              mod_version: mod_version, mod_authors: mod_authors, mod_description: mod_description,
     ]
@@ -173,7 +177,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         mainFile.addRequirement("balm")
         mainFile.addRequirement("waystones")
         mainFile.addRequirement("forge-config-api-port")
-        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        fabric_game_versions.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
         // CurseForge requires an environment; the mod runs on both sides.
         mainFile.addGameVersion("Client", "Server")
         mainFile.releaseType = release_type
@@ -187,7 +191,7 @@ modrinth {
     versionNumber = mod_version
     versionType = release_type
     uploadFile = remapJar
-    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    gameVersions = fabric_game_versions.split(',').collect { it.trim() }
     loaders = ["fabric"]
     dependencies {
         required.project "P7dR8mSH" // Fabric API
