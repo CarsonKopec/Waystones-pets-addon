@@ -21,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Wolf;
@@ -262,7 +263,7 @@ public class PetTeleportGameTests {
         PetFollowData.setFollows(pet, false);
 
         CompoundTag saved = pet.saveWithoutId(new CompoundTag());
-        Wolf reloaded = EntityType.WOLF.create(helper.getLevel());
+        Wolf reloaded = EntityType.WOLF.create(helper.getLevel(), EntitySpawnReason.LOAD);
         check(reloaded != null, "Could not create a wolf to load into");
         reloaded.load(saved);
 

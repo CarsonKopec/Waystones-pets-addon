@@ -91,7 +91,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     var gameVersions = neoforge_game_versions.split(',').collect { it.trim() }
     var replaceProperties = [
             minecraft_version      : minecraft_version,
-            minecraft_version_range: "[${gameVersions.first()},${gameVersions.last()}]",
+            minecraft_version_range: gameVersions.size() == 1 ? "[${gameVersions[0]}]" : "[${gameVersions.first()},${gameVersions.last()}]",
             neo_version            : neo_version,
             neo_version_range      : neo_version_range,
             neo_loader_version_range: neo_loader_version_range,

@@ -112,6 +112,6 @@ public class PetTeleportHandler {
     // Unlike changeDimension, this lands the pet at the exact position in any dimension
     // instead of requiring a portal near the destination.
     private static void teleportPet(TamableAnimal pet, ServerLevel targetLevel, double x, double y, double z) {
-        pet.teleportTo(targetLevel, x, y, z, Set.of(), pet.getYRot(), pet.getXRot());
+        pet.teleportTo(targetLevel, x, y, z, Set.of(), pet.getYRot(), pet.getXRot(), true);
     }
 }
