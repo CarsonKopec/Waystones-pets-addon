@@ -31,3 +31,11 @@ dependencies {
 
 sourceSets.main.resources.srcDir('src/generated/resources')
 
+
+// Game tests run inside each loader's test server and are compiled there; they never ship in the mod jars.
+sourceSets {
+    gametest {
+        compileClasspath += main.compileClasspath + main.output
+        runtimeClasspath += main.runtimeClasspath + main.output
+    }
+}
