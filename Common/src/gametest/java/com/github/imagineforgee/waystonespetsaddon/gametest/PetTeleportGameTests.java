@@ -24,6 +24,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -186,7 +187,10 @@ public class PetTeleportGameTests {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         check(nether != null, "The test server should have a Nether");
         BlockPos netherPos = helper.absolutePos(OWNER_POS).atY(100);
-        clearPocket(nether, netherPos);
+        ChunkPos center = new ChunkPos(netherPos);
+        // A real player arriving keeps these chunks loaded; the mock player does not, so load them the same way.
+        setChunksForced(nether, center, true);
+        buildSealedRoom(nether, netherPos);
 
         ServerPlayer owner = spawnOwner(helper);
         Wolf pet = spawnPet(helper, owner, 3, 3);
@@ -194,10 +198,34 @@ public class PetTeleportGameTests {
         teleport(owner, placeWaystone(nether, netherPos));
 
         check(owner.level() == nether, "The owner should now be in the Nether");
-        Entity arrived = nether.getEntity(pet.getUUID());
-        check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether");
-        assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
-        finish(helper, owner, pet, arrived);
+        check(pet.getRemovalReason() == Entity.RemovalReason.CHANGED_DIMENSION,
+                "The pet should have left the Overworld (removed=" + pet.isRemoved() + ", reason=" + pet.getRemovalReason() + ")");
+        // A pet moved into a chunk that is still loading only shows up once the chunk is ready, a tick or so later,
+        // so wait for it the way a player would, rather than checking within the same tick.
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    Entity arrived = nether.getEntity(pet.getUUID());
+                    check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether (wolves near the owner there: "
+                            + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size() + ")");
+                    assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
+                })
+                .thenExecute(() -> {
+                    Entity arrived = nether.getEntity(pet.getUUID());
+                    if (arrived != null) {
+                        arrived.discard();
+                    }
+                    removePlayer(owner);
+                    setChunksForced(nether, center, false);
+                })
+                .thenSucceed();
+    }
+
+    private static void setChunksForced(ServerLevel level, ChunkPos center, boolean forced) {
+        for (int x = center.x - 1; x <= center.x + 1; x++) {
+            for (int z = center.z - 1; z <= center.z + 1; z++) {
+                level.setChunkForced(x, z, forced);
+            }
+        }
     }
 
     private static void switchingToFollowsStandsPetUp(GameTestHelper helper) {
@@ -271,11 +299,18 @@ public class PetTeleportGameTests {
                 .orElseThrow(() -> new GameTestAssertException("Could not place a waystone at " + pos));
     }
 
-    private static void clearPocket(ServerLevel level, BlockPos center) {
-        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-2, -1, -2), center.offset(2, 3, 2))) {
-            level.setBlockAndUpdate(pos, pos.getY() < center.getY()
-                    ? Blocks.STONE.defaultBlockState()
-                    : Blocks.AIR.defaultBlockState());
+    /**
+     * Builds a sealed stone room around {@code center}. Game tests run at random coordinates, so the Nether around
+     * them differs every run; an open pocket sometimes let lava in, which killed the pet and failed the test.
+     */
+    private static void buildSealedRoom(ServerLevel level, BlockPos center) {
+        BlockPos min = center.offset(-3, -1, -3);
+        BlockPos max = center.offset(3, 4, 3);
+        for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
+            boolean wall = pos.getX() == min.getX() || pos.getX() == max.getX()
+                    || pos.getY() == min.getY() || pos.getY() == max.getY()
+                    || pos.getZ() == min.getZ() || pos.getZ() == max.getZ();
+            level.setBlockAndUpdate(pos, wall ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState());
         }
     }
 
