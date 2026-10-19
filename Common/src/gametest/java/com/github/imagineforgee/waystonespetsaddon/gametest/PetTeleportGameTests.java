@@ -7,11 +7,12 @@ import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
 import com.github.imagineforgee.waystonespetsaddon.common.network.SetPetFollowsMessage;
 import net.blay09.mods.balm.api.Balm;
 import net.blay09.mods.balm.api.event.EventPriority;
-import net.blay09.mods.waystones.api.Waystone;
+import net.blay09.mods.waystones.api.IWaystone;
 import net.blay09.mods.waystones.api.WaystoneStyles;
 import net.blay09.mods.waystones.api.WaystonesAPI;
-import net.blay09.mods.waystones.api.error.WaystoneTeleportError;
-import net.blay09.mods.waystones.api.event.WaystoneTeleportEvent;
+import net.blay09.mods.waystones.api.WaystoneTeleportError;
+import net.blay09.mods.waystones.api.WaystoneTeleportEvent;
+import net.blay09.mods.waystones.core.WarpMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestGenerator;
@@ -166,7 +167,7 @@ public class PetTeleportGameTests {
         PetFollowData.setFollows(stayer, false);
         Vec3 followerStart = follower.position();
         Vec3 stayerStart = stayer.position();
-        Waystone destination = placeWaystone(helper.getLevel(), helper.absolutePos(DESTINATION));
+        IWaystone destination = placeWaystone(helper.getLevel(), helper.absolutePos(DESTINATION));
 
         cancelNextTeleport = true;
         WaystoneTeleportError error;
@@ -293,7 +294,7 @@ public class PetTeleportGameTests {
         return wolf;
     }
 
-    private static Waystone placeWaystone(ServerLevel level, BlockPos pos) {
+    private static IWaystone placeWaystone(ServerLevel level, BlockPos pos) {
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         return WaystonesAPI.placeWaystone(level, pos, WaystoneStyles.DEFAULT)
                 .orElseThrow(() -> new GameTestAssertException("Could not place a waystone at " + pos));
@@ -314,16 +315,18 @@ public class PetTeleportGameTests {
         }
     }
 
-    private static void teleport(ServerPlayer player, Waystone destination) {
+    private static void teleport(ServerPlayer player, IWaystone destination) {
         WaystoneTeleportError error = tryTeleport(player, destination);
         if (error != null) {
             throw new GameTestAssertException("The waystone teleport failed: " + describe(error));
         }
     }
 
-    private static WaystoneTeleportError tryTeleport(ServerPlayer player, Waystone destination) {
-        return WaystonesAPI.createDefaultTeleportContext(player, destination, context -> {})
-                .flatMap(WaystonesAPI::tryTeleport)
+    /** Teleports the way a player using one waystone to reach another does. */
+    private static WaystoneTeleportError tryTeleport(ServerPlayer player, IWaystone destination) {
+        IWaystone origin = placeWaystone(player.serverLevel(), player.blockPosition().offset(2, 0, -2));
+        return WaystonesAPI.createDefaultTeleportContext(player, destination, WarpMode.WAYSTONE_TO_WAYSTONE, origin)
+                .flatMap(context -> WaystonesAPI.tryTeleport(context))
                 .right()
                 .orElse(null);
     }
