@@ -35,10 +35,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * End-to-end tests that teleport a player through real Waystones waystones, so they cover Waystones' own pet
- * transport and event flow as well as this mod. Each test finishes within its first tick.
+ * transport and event flow as well as this mod. Each test but the Nether one finishes within its first tick.
  */
 public class PetTeleportGameTests {
     private static final String STRUCTURE = Constants.MOD_ID + ":pets_platform";
@@ -47,6 +48,9 @@ public class PetTeleportGameTests {
     private static final BlockPos OWNER_POS = new BlockPos(2, 1, 2);
 
     private static boolean cancelNextTeleport;
+
+    /** Creates the tests' fake players. A loader whose rules vanilla's mock player breaks can swap in its own. */
+    protected static Function<GameTestHelper, ServerPlayer> mockPlayerFactory = GameTestHelper::makeMockServerPlayerInLevel;
 
     static {
         // Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Pre handler ran.
@@ -187,10 +191,14 @@ public class PetTeleportGameTests {
     private static void petFollowsIntoAnotherDimension(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         check(nether != null, "The test server should have a Nether");
-        BlockPos netherPos = helper.absolutePos(OWNER_POS).atY(100);
-        ChunkPos center = new ChunkPos(netherPos);
-        // A real player arriving keeps these chunks loaded; the mock player does not, so load them the same way.
-        setChunksForced(nether, center, true);
+        // The middle of a chunk, so the owner and the pet both land in that chunk.
+        BlockPos netherPos = new ChunkPos(helper.absolutePos(OWNER_POS)).getMiddleBlockPosition(100);
+        ChunkPos chunk = new ChunkPos(netherPos);
+        // A real player arriving keeps the chunk loaded; the mock player does not, so load it the same way.
+        nether.setChunkForced(chunk.x, chunk.z, true);
+        // A chunk's entities only show up once every chunk within two of it has generated. Left to the worker threads,
+        // that sometimes took longer than the whole test, as the game test server runs ticks as fast as it can.
+        generateChunksAround(nether, chunk, 2);
         buildSealedRoom(nether, netherPos);
 
         ServerPlayer owner = spawnOwner(helper);
@@ -201,13 +209,14 @@ public class PetTeleportGameTests {
         check(owner.level() == nether, "The owner should now be in the Nether");
         check(pet.getRemovalReason() == Entity.RemovalReason.CHANGED_DIMENSION,
                 "The pet should have left the Overworld (removed=" + pet.isRemoved() + ", reason=" + pet.getRemovalReason() + ")");
-        // A pet moved into a chunk that is still loading only shows up once the chunk is ready, a tick or so later,
-        // so wait for it the way a player would, rather than checking within the same tick.
+        // A pet moved into a chunk whose entities are still loading only shows up once they are, so wait for it the
+        // way a player would, rather than checking within the same tick.
         helper.startSequence()
                 .thenWaitUntil(() -> {
                     Entity arrived = nether.getEntity(pet.getUUID());
                     check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether (wolves near the owner there: "
-                            + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size() + ")");
+                            + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size()
+                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(chunk.toLong()) + ")");
                     assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
                 })
                 .thenExecute(() -> {
@@ -216,15 +225,15 @@ public class PetTeleportGameTests {
                         arrived.discard();
                     }
                     removePlayer(owner);
-                    setChunksForced(nether, center, false);
+                    nether.setChunkForced(chunk.x, chunk.z, false);
                 })
                 .thenSucceed();
     }
 
-    private static void setChunksForced(ServerLevel level, ChunkPos center, boolean forced) {
-        for (int x = center.x - 1; x <= center.x + 1; x++) {
-            for (int z = center.z - 1; z <= center.z + 1; z++) {
-                level.setChunkForced(x, z, forced);
+    private static void generateChunksAround(ServerLevel level, ChunkPos center, int radius) {
+        for (int x = center.x - radius; x <= center.x + radius; x++) {
+            for (int z = center.z - radius; z <= center.z + radius; z++) {
+                level.getChunk(x, z);
             }
         }
     }
@@ -281,7 +290,7 @@ public class PetTeleportGameTests {
     // --- helpers ---
 
     private static ServerPlayer spawnOwner(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = mockPlayerFactory.apply(helper);
         // Creative skips Waystones' XP and item costs, which are not what these tests are about.
         player.setGameMode(GameType.CREATIVE);
         player.moveTo(helper.absoluteVec(Vec3.atBottomCenterOf(OWNER_POS)));
