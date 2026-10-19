@@ -45,6 +45,12 @@ runs {
     }
 }
 
+// Each game test run starts from a fresh world and config, so nothing left by a failed run, or by a run for another
+// Minecraft version, can affect it.
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    doFirst { project.delete(file('runs/gameTestServer/world'), file('runs/gameTestServer/config')) }
+}
+
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
