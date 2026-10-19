@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "waystonespetsaddon-gametest",
+  "version": "1.0.0",
+  "name": "Waystones pets addon game tests",
+  "description": "Game tests for Waystones pets addon. Only used by the gametest run, never shipped.",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.github.imagineforgee.waystonespetsaddon.gametest.PetTeleportGameTests"
+    ]
+  },
+  "depends": {
+    "waystonespetsaddon": "*",
+    "fabric-gametest-api-v1": "*"
+  }
+}

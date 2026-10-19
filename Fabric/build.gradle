@@ -52,7 +52,25 @@ dependencies {
 
 }
 
+// Game tests: Common's test sources plus a small test mod that registers them, kept out of the release jar.
+sourceSets {
+    gametest {
+        java.srcDir project(":Common").file("src/gametest/java")
+        resources.srcDir project(":Common").file("src/gametest/resources")
+        compileClasspath += main.compileClasspath + main.output
+        runtimeClasspath += main.runtimeClasspath + main.output
+    }
+}
+
 loom {
+    mods {
+        waystonespetsaddon {
+            sourceSet sourceSets.main
+        }
+        "waystonespetsaddon-gametest" {
+            sourceSet sourceSets.gametest
+        }
+    }
     runs {
         client {
             client()
@@ -67,6 +85,15 @@ loom {
             setConfigName("Fabric Server")
             ideConfigGenerated(true)
             runDir("run")
+        }
+        // ./gradlew :Fabric:runGametest starts a headless server, runs every game test and exits non-zero on failure.
+        gametest {
+            server()
+            setConfigName("Fabric Game Tests")
+            source sourceSets.gametest
+            vmArg "-Dfabric-api.gametest"
+            vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.file("gametest/report.xml").get().asFile}"
+            runDir "build/gametest"
         }
     }
 }
@@ -92,7 +119,7 @@ processResources {
     }
 }
 
-tasks.withType(JavaCompile) {
+tasks.named("compileJava", JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
 }
 
