@@ -1,3 +1,6 @@
+0.1.1
+- Fabric: works with any Fabric Loader from 0.14 on. 0.1.0 only loaded on Fabric Loader 0.17.2.
+
 0.1.0
 - Ported to Minecraft 1.20.4 (the Fabric build also runs on 1.20.3) and 1.20.6, for Fabric, Forge and NeoForge.
 - New Pets button in the Waystones menu: lists your nearby pets, each with a small model and a Follows / Stays toggle saved on the pet.
