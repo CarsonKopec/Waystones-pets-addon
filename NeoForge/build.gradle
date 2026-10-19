@@ -11,6 +11,17 @@ base {
     archivesName = "${mod_id}-neoforge-${mod_version}-${minecraft_version}"
 }
 
+// Game tests: Common's test sources plus the class that registers them. Only the game test run adds them to the mod,
+// so they never ship in the jar.
+sourceSets {
+    gametest {
+        java.srcDir project(":Common").file("src/gametest/java")
+        resources.srcDir project(":Common").file("src/gametest/resources")
+        compileClasspath += main.compileClasspath + main.output
+        runtimeClasspath += main.runtimeClasspath + main.output
+    }
+}
+
 runs {
     configureEach {
         systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -25,6 +36,12 @@ runs {
     server {
         systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
         programArgument '--nogui'
+    }
+
+    // ./gradlew :NeoForge:runGameTestServer runs every game test on a headless server, then stops.
+    gameTestServer {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        modSource project.sourceSets.gametest
     }
 }
 

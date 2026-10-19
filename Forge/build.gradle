@@ -14,6 +14,16 @@ base {
     archivesName = "${mod_id}-forge-${mod_version}-${minecraft_version}"
 }
 
+// Game tests: Common's test sources plus a small test-only mod that registers them, kept out of the release jar.
+sourceSets {
+    gametest {
+        java.srcDir project(":Common").file("src/gametest/java")
+        resources.srcDir project(":Common").file("src/gametest/resources")
+        compileClasspath += main.compileClasspath + main.output
+        runtimeClasspath += main.runtimeClasspath + main.output
+    }
+}
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
     // Forge 50 (1.20.6) runs on Mojang names, so the jar ships as compiled instead of being reobfuscated to SRG.
@@ -53,6 +63,24 @@ minecraft {
             }
         }
 
+        // ./gradlew :Forge:GameTestServer runs every game test on a headless server, then stops.
+        gameTestServer {
+            workingDirectory project.file('build/gametest')
+            ideaModule "${rootProject.name}.${project.name}.gametest"
+            taskName 'GameTestServer'
+            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                modGameTestRun {
+                    source sourceSets.main
+                }
+                modGameTests {
+                    source sourceSets.gametest
+                }
+            }
+        }
+
         data {
             workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
@@ -70,6 +98,7 @@ minecraft {
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
+
 
 // Forge 49+ launches mods as Java modules and only sees a mod's classes when they sit in the same folder as its
 // resources, so build both into one directory (as in Forge's own MDK). Common's sources and resources are already
@@ -94,7 +123,7 @@ dependencies {
     compileOnly project(":Common")
 }
 
-tasks.withType(JavaCompile) {
+tasks.named("compileJava", JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
 }
 

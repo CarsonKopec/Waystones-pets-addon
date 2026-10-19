@@ -1,0 +1,16 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="Apache License 2.0"
+
+[[mods]]
+modId="waystonespetsaddon_gametest"
+version="1.0.0"
+displayName="Waystones pets addon game tests"
+description='''Game tests for Waystones pets addon. Only used by the game test run, never shipped.'''
+
+[[dependencies.waystonespetsaddon_gametest]]
+modId="waystonespetsaddon"
+mandatory=true
+versionRange="[0,)"
+ordering="AFTER"
+side="BOTH"
