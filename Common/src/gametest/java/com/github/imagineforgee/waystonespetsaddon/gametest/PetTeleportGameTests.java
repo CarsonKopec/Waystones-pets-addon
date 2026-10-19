@@ -34,10 +34,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * End-to-end tests that teleport a player through real Waystones waystones, so they cover Waystones' own pet
- * transport and event flow as well as this mod. Each test finishes within its first tick.
+ * transport and event flow as well as this mod. Each test but the Nether one finishes within its first tick.
  */
 public class PetTeleportGameTests {
     private static final String STRUCTURE = Constants.MOD_ID + ":pets_platform";
@@ -46,6 +47,9 @@ public class PetTeleportGameTests {
     private static final BlockPos OWNER_POS = new BlockPos(2, 1, 2);
 
     private static boolean cancelNextTeleport;
+
+    /** Creates the tests' fake players. A loader whose rules vanilla's mock player breaks can swap in its own. */
+    protected static Function<GameTestHelper, ServerPlayer> mockPlayerFactory = GameTestHelper::makeMockServerPlayerInLevel;
 
     static {
         // Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Pre handler ran.
@@ -66,14 +70,20 @@ public class PetTeleportGameTests {
                 test("other_players_pet_stays_behind", PetTeleportGameTests::otherPlayersPetStaysBehind),
                 test("max_pets_takes_the_closest", PetTeleportGameTests::maxPetsTakesTheClosest),
                 test("cancelled_teleport_leaves_pets_alone", PetTeleportGameTests::cancelledTeleportLeavesPetsAlone),
-                test("pet_follows_into_another_dimension", PetTeleportGameTests::petFollowsIntoAnotherDimension),
+                // The Nether chunks generate on worker threads while the game test server runs ticks as fast as it
+                // can, so loading them took over 100 ticks in some runs.
+                test("pet_follows_into_another_dimension", 400, PetTeleportGameTests::petFollowsIntoAnotherDimension),
                 test("switching_to_follows_stands_pet_up", PetTeleportGameTests::switchingToFollowsStandsPetUp),
                 test("stay_choice_survives_save_and_load", PetTeleportGameTests::stayChoiceSurvivesSaveAndLoad),
                 test("pet_list_is_closest_first_and_owned_only", PetTeleportGameTests::petListIsClosestFirstAndOwnedOnly));
     }
 
     private static TestFunction test(String name, Consumer<GameTestHelper> body) {
-        return new TestFunction(Constants.MOD_ID, Constants.MOD_ID + "." + name, STRUCTURE, 100, 0, true, body);
+        return test(name, 100, body);
+    }
+
+    private static TestFunction test(String name, int maxTicks, Consumer<GameTestHelper> body) {
+        return new TestFunction(Constants.MOD_ID, Constants.MOD_ID + "." + name, STRUCTURE, maxTicks, 0, true, body);
     }
 
     private static void followingPetTeleportsWithOwner(GameTestHelper helper) {
@@ -200,13 +210,14 @@ public class PetTeleportGameTests {
         check(owner.level() == nether, "The owner should now be in the Nether");
         check(pet.getRemovalReason() == Entity.RemovalReason.CHANGED_DIMENSION,
                 "The pet should have left the Overworld (removed=" + pet.isRemoved() + ", reason=" + pet.getRemovalReason() + ")");
-        // A pet moved into a chunk that is still loading only shows up once the chunk is ready, a tick or so later,
-        // so wait for it the way a player would, rather than checking within the same tick.
+        // A pet moved into a chunk whose entities are still loading only shows up once they are, so wait for it the
+        // way a player would, rather than checking within the same tick.
         helper.startSequence()
                 .thenWaitUntil(() -> {
                     Entity arrived = nether.getEntity(pet.getUUID());
                     check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether (wolves near the owner there: "
-                            + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size() + ")");
+                            + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size()
+                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(center.toLong()) + ")");
                     assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
                 })
                 .thenExecute(() -> {
@@ -280,7 +291,7 @@ public class PetTeleportGameTests {
     // --- helpers ---
 
     private static ServerPlayer spawnOwner(GameTestHelper helper) {
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ServerPlayer player = mockPlayerFactory.apply(helper);
         // Creative skips Waystones' XP and item costs, which are not what these tests are about.
         player.setGameMode(GameType.CREATIVE);
         player.moveTo(helper.absoluteVec(Vec3.atBottomCenterOf(OWNER_POS)));

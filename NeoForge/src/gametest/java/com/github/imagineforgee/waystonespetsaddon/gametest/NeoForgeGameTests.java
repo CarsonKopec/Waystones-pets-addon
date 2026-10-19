@@ -1,11 +1,21 @@
 package com.github.imagineforgee.waystonespetsaddon.gametest;
 
 import com.github.imagineforgee.waystonespetsaddon.common.Constants;
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.gametest.framework.GameTestGenerator;
+import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestFunction;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 import java.util.Collection;
+import java.util.UUID;
 
 /**
  * Registers the shared game tests on NeoForge. The game test run adds this class to the mod, and NeoForge finds tests
@@ -13,10 +23,37 @@ import java.util.Collection;
  */
 @GameTestHolder(Constants.MOD_ID)
 public class NeoForgeGameTests extends PetTeleportGameTests {
+    static {
+        // NeoForge only sends mod packets over connections that negotiated them, which vanilla's mock player never
+        // does, so logging one in failed as soon as Balm synced Waystones' config to it.
+        mockPlayerFactory = NeoForgeGameTests::makeMockPlayer;
+    }
 
     @Override
     @GameTestGenerator
     public Collection<TestFunction> tests() {
         return super.tests();
+    }
+
+    /** Vanilla's makeMockServerPlayerInLevel, with a connection NeoForge treats as negotiated. */
+    private static ServerPlayer makeMockPlayer(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "test-mock-player"), false);
+        ServerPlayer player = new ServerPlayer(level.getServer(), level, cookie.gameProfile(), cookie.clientInformation()) {
+            @Override
+            public boolean isSpectator() {
+                return false;
+            }
+
+            @Override
+            public boolean isCreative() {
+                return true;
+            }
+        };
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        NetworkRegistry.configureMockConnection(connection);
+        level.getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+        return player;
     }
 }
