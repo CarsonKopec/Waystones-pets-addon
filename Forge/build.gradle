@@ -87,11 +87,14 @@ tasks.named("compileJava", JavaCompile) {
 
 processResources {
     from(project(":Common").sourceSets.main.resources)
-    var replaceProperties = [minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
+    def gameVersions = forge_game_versions.split(',').collect { it.trim() }
+    var replaceProperties = [minecraft_version   : minecraft_version,
+                             minecraft_version_range: gameVersions.size() == 1 ? "[${gameVersions[0]}]" : "[${gameVersions.first()},${gameVersions.last()}]",
                              forge_version       : forge_version, forge_version_range: forge_version_range,
                              loader_version_range: loader_version_range,
                              mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-                             mod_authors         : mod_authors, mod_description: mod_description, 'credits': mod_credits,]
+                             mod_authors         : mod_authors, mod_description: mod_description, 'credits': mod_credits,
+                             waystones_version_range: waystones_forge_version_range, balm_version_range: balm_forge_version_range,]
 
     inputs.properties replaceProperties
 
@@ -121,7 +124,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         mainFile.addModLoader("Forge")
         mainFile.addRequirement("balm")
         mainFile.addRequirement("waystones")
-        minecraft_version.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
+        forge_game_versions.split(',').toList().each { mainFile.addGameVersion(it.trim()) }
         // CurseForge requires an environment; the mod runs on both sides.
         mainFile.addGameVersion("Client", "Server")
         mainFile.releaseType = release_type
@@ -135,7 +138,7 @@ modrinth {
     versionNumber = mod_version
     versionType = release_type
     uploadFile = jar.archiveFile
-    gameVersions = minecraft_version.split(',').collect { it.trim() }
+    gameVersions = forge_game_versions.split(',').collect { it.trim() }
     loaders = ["forge"]
     dependencies {
         required.project "MBAkmtvl" // Balm

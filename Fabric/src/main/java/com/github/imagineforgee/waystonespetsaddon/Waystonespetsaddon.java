@@ -16,7 +16,7 @@ public class Waystonespetsaddon implements ModInitializer {
     @Override
     public void onInitialize() {
         ConfigRegistry.INSTANCE.register(Constants.MOD_ID, ModConfig.Type.COMMON, FabricConfig.COMMON_SPEC);
-        Balm.initialize(Constants.MOD_ID, EmptyLoadContext.INSTANCE, Common::initialize);
+        Balm.initializeMod(Constants.MOD_ID, EmptyLoadContext.INSTANCE, Common::initialize);
         FabricConfig.applyToCommon();
         PlatformAbstractions.delayedTaskFactory = DelayedTaskImpl::new;
         FabricTickHandler.register();

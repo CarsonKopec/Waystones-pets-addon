@@ -10,6 +10,6 @@ public class WaystonespetsaddonClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        BalmClient.initialize(Constants.MOD_ID, EmptyLoadContext.INSTANCE, CommonClient::initialize);
+        BalmClient.initializeMod(Constants.MOD_ID, EmptyLoadContext.INSTANCE, CommonClient::initialize);
     }
 }

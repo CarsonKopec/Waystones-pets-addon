@@ -40,7 +40,7 @@ public class ModEventHandlers {
             if (pets == null || !(context.getEntity() instanceof ServerPlayer player)) return;
 
             // Post fires once the player has arrived, so where they now stand is the destination.
-            PetTeleportHandler.handleTeleport(player, pets, player.position(), player.serverLevel());
+            PetTeleportHandler.handleTeleport(player, pets, player.position(), player.level());
         });
     }
 }

@@ -29,7 +29,7 @@ public record SetPetFollowsMessage(UUID petId, boolean follows) implements Custo
     }
 
     public static void handle(ServerPlayer player, SetPetFollowsMessage message) {
-        Entity entity = player.serverLevel().getEntity(message.petId);
+        Entity entity = player.level().getEntity(message.petId);
         if (entity instanceof TamableAnimal pet && pet.isOwnedBy(player)) {
             PetFollowData.setFollows(pet, message.follows);
             // Pets told to stay are sat down when their owner teleports, so following again means getting back up.

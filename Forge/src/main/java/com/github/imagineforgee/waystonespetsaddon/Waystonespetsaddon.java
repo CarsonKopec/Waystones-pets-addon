@@ -5,9 +5,11 @@ import com.github.imagineforgee.waystonespetsaddon.common.Common;
 import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import com.github.imagineforgee.waystonespetsaddon.common.api.PlatformAbstractions;
 import com.github.imagineforgee.waystonespetsaddon.common.client.CommonClient;
+import com.github.imagineforgee.waystonespetsaddon.events.ForgeTickHandler;
 import net.blay09.mods.balm.api.Balm;
 import net.blay09.mods.balm.api.client.BalmClient;
 import net.blay09.mods.balm.forge.ForgeLoadContext;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -18,18 +20,22 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 public class Waystonespetsaddon {
     
     public Waystonespetsaddon(FMLJavaModLoadingContext context) {
-        ForgeLoadContext loadContext = new ForgeLoadContext(context.getModEventBus());
-        Balm.initialize(Constants.MOD_ID, loadContext, Common::initialize);
+        BusGroup modBusGroup = context.getModBusGroup();
+        ForgeLoadContext loadContext = new ForgeLoadContext(modBusGroup);
+        Balm.initializeMod(Constants.MOD_ID, loadContext, Common::initialize);
         if (FMLEnvironment.dist.isClient()) {
-            BalmClient.initialize(Constants.MOD_ID, loadContext, CommonClient::initialize);
+            BalmClient.initializeMod(Constants.MOD_ID, loadContext, CommonClient::initialize);
         }
         context.registerConfig(ModConfig.Type.COMMON, ForgeConfig.SPEC);
-        context.getModEventBus().addListener((ModConfigEvent e) -> {
-            if (e.getConfig().getSpec() == ForgeConfig.SPEC) {
-                ForgeConfig.CONFIG.applyToCommon();
-            }
-        });
+        ModConfigEvent.Loading.getBus(modBusGroup).addListener(e -> applyConfig(e.getConfig()));
+        ModConfigEvent.Reloading.getBus(modBusGroup).addListener(e -> applyConfig(e.getConfig()));
         PlatformAbstractions.delayedTaskFactory = DelayedTaskImpl::new;
+        ForgeTickHandler.register();
     }
 
+    private static void applyConfig(ModConfig config) {
+        if (config.getSpec() == ForgeConfig.SPEC) {
+            ForgeConfig.CONFIG.applyToCommon();
+        }
+    }
 }

@@ -5,7 +5,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestServer;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ConfigTracker;
@@ -28,9 +27,9 @@ public class ForgeGameTests {
     public ForgeGameTests(FMLJavaModLoadingContext context) {
         DeferredRegister<Consumer<GameTestHelper>> tests = DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
         PetTeleportGameTests.TESTS.forEach((name, test) -> tests.register(name, () -> test));
-        tests.register(context.getModEventBus());
+        tests.register(context.getModBusGroup());
 
-        MinecraftForge.EVENT_BUS.addListener(ForgeGameTests::startLikeARealServer);
+        ServerStartedEvent.BUS.addListener(ForgeGameTests::startLikeARealServer);
     }
 
     /**

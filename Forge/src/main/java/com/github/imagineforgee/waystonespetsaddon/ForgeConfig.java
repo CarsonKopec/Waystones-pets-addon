@@ -2,10 +2,6 @@ package com.github.imagineforgee.waystonespetsaddon;
 
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.ModLoadingContext;
 
 public class ForgeConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
@@ -17,24 +13,6 @@ public class ForgeConfig {
         CONFIG = new Config(BUILDER);
         BUILDER.pop();
         SPEC = BUILDER.build();
-    }
-
-    public ForgeConfig() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoad);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onReload);
-    }
-
-    private void onLoad(final ModConfigEvent.Loading event) {
-        if (event.getConfig().getSpec() == SPEC) {
-            CONFIG.applyToCommon();
-        }
-    }
-
-    private void onReload(final ModConfigEvent.Reloading event) {
-        if (event.getConfig().getSpec() == SPEC) {
-            CONFIG.applyToCommon();
-        }
     }
 
     public static class Config {

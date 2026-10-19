@@ -18,6 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -27,6 +28,8 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -265,10 +268,12 @@ public class PetTeleportGameTests {
         Wolf pet = spawnPet(helper, owner, 3, 3);
         PetFollowData.setFollows(pet, false);
 
-        CompoundTag saved = pet.saveWithoutId(new CompoundTag());
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
+        pet.saveWithoutId(output);
+        CompoundTag saved = output.buildResult();
         Wolf reloaded = EntityType.WOLF.create(helper.getLevel(), EntitySpawnReason.LOAD);
         check(reloaded != null, "Could not create a wolf to load into");
-        reloaded.load(saved);
+        reloaded.load(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), saved));
 
         check(!PetFollowData.follows(reloaded), "A pet set to Stays should still stay after being saved and loaded");
         finish(helper, owner, pet);
