@@ -28,6 +28,5 @@ plugins {
 rootProject.name = 'Waystones pets addon'
 include("Common")
 include("Fabric")
-// No Forge: Waystones has no Forge build for 1.21.3.
-// include("Forge")
+include("Forge")
 include("NeoForge")

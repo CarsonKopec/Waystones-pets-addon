@@ -31,7 +31,7 @@ configurations {
     gametestRuntimeOnly.extendsFrom runtimeOnly
 }
 
-// Forge 52 (1.21.1) runs on Mojang names, so the jar ships as compiled; ForgeGradle 7 no longer reobfuscates.
+// Forge runs on Mojang names since 1.20.6, so the jar ships as compiled; ForgeGradle 7 no longer reobfuscates.
 minecraft {
     mappings channel: 'official', version: minecraft_version
 

@@ -49,7 +49,7 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return width / 2 + ROW_WIDTH / 2 + 6;
     }
 
