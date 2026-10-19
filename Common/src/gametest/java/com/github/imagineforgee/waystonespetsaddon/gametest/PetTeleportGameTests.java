@@ -70,20 +70,14 @@ public class PetTeleportGameTests {
                 test("other_players_pet_stays_behind", PetTeleportGameTests::otherPlayersPetStaysBehind),
                 test("max_pets_takes_the_closest", PetTeleportGameTests::maxPetsTakesTheClosest),
                 test("cancelled_teleport_leaves_pets_alone", PetTeleportGameTests::cancelledTeleportLeavesPetsAlone),
-                // The Nether chunks generate on worker threads while the game test server runs ticks as fast as it
-                // can, so loading them took over 100 ticks in some runs.
-                test("pet_follows_into_another_dimension", 400, PetTeleportGameTests::petFollowsIntoAnotherDimension),
+                test("pet_follows_into_another_dimension", PetTeleportGameTests::petFollowsIntoAnotherDimension),
                 test("switching_to_follows_stands_pet_up", PetTeleportGameTests::switchingToFollowsStandsPetUp),
                 test("stay_choice_survives_save_and_load", PetTeleportGameTests::stayChoiceSurvivesSaveAndLoad),
                 test("pet_list_is_closest_first_and_owned_only", PetTeleportGameTests::petListIsClosestFirstAndOwnedOnly));
     }
 
     private static TestFunction test(String name, Consumer<GameTestHelper> body) {
-        return test(name, 100, body);
-    }
-
-    private static TestFunction test(String name, int maxTicks, Consumer<GameTestHelper> body) {
-        return new TestFunction(Constants.MOD_ID, Constants.MOD_ID + "." + name, STRUCTURE, maxTicks, 0, true, body);
+        return new TestFunction(Constants.MOD_ID, Constants.MOD_ID + "." + name, STRUCTURE, 100, 0, true, body);
     }
 
     private static void followingPetTeleportsWithOwner(GameTestHelper helper) {
@@ -196,10 +190,14 @@ public class PetTeleportGameTests {
     private static void petFollowsIntoAnotherDimension(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         check(nether != null, "The test server should have a Nether");
-        BlockPos netherPos = helper.absolutePos(OWNER_POS).atY(100);
-        ChunkPos center = new ChunkPos(netherPos);
-        // A real player arriving keeps these chunks loaded; the mock player does not, so load them the same way.
-        setChunksForced(nether, center, true);
+        // The middle of a chunk, so the owner and the pet both land in that chunk.
+        BlockPos netherPos = new ChunkPos(helper.absolutePos(OWNER_POS)).getMiddleBlockPosition(100);
+        ChunkPos chunk = new ChunkPos(netherPos);
+        // A real player arriving keeps the chunk loaded; the mock player does not, so load it the same way.
+        nether.setChunkForced(chunk.x, chunk.z, true);
+        // A chunk's entities only show up once every chunk within two of it has generated. Left to the worker threads,
+        // that sometimes took longer than the whole test, as the game test server runs ticks as fast as it can.
+        generateChunksAround(nether, chunk, 2);
         buildSealedRoom(nether, netherPos);
 
         ServerPlayer owner = spawnOwner(helper);
@@ -217,7 +215,7 @@ public class PetTeleportGameTests {
                     Entity arrived = nether.getEntity(pet.getUUID());
                     check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether (wolves near the owner there: "
                             + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size()
-                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(center.toLong()) + ")");
+                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(chunk.toLong()) + ")");
                     assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
                 })
                 .thenExecute(() -> {
@@ -226,15 +224,15 @@ public class PetTeleportGameTests {
                         arrived.discard();
                     }
                     removePlayer(owner);
-                    setChunksForced(nether, center, false);
+                    nether.setChunkForced(chunk.x, chunk.z, false);
                 })
                 .thenSucceed();
     }
 
-    private static void setChunksForced(ServerLevel level, ChunkPos center, boolean forced) {
-        for (int x = center.x - 1; x <= center.x + 1; x++) {
-            for (int z = center.z - 1; z <= center.z + 1; z++) {
-                level.setChunkForced(x, z, forced);
+    private static void generateChunksAround(ServerLevel level, ChunkPos center, int radius) {
+        for (int x = center.x - radius; x <= center.x + radius; x++) {
+            for (int z = center.z - radius; z <= center.z + radius; z++) {
+                level.getChunk(x, z);
             }
         }
     }
