@@ -20,7 +20,7 @@ public class Waystonespetsaddon {
     public Waystonespetsaddon(IEventBus modEventBus, ModContainer modContainer) {
         NeoForgeLoadContext loadContext = new NeoForgeLoadContext(modEventBus);
         Balm.initializeMod(Constants.MOD_ID, loadContext, Common::initialize);
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             BalmClient.initializeMod(Constants.MOD_ID, loadContext, CommonClient::initialize);
         }
         modContainer.registerConfig(ModConfig.Type.COMMON, NeoForgeConfig.SPEC);

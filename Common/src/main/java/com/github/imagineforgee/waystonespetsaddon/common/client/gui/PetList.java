@@ -72,8 +72,11 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
         }
 
         @Override
-        public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+            int left = getContentX();
+            int top = getContentY();
+            int width = getContentWidth();
+            int height = getContentHeight();
             // Read the pet live so the row keeps up, e.g. when switching to Follows stands it up. If it has walked
             // out of the client's tracking range, show no model and the state from when the screen opened.
             boolean sitting = pet.sitting();

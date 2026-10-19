@@ -387,7 +387,7 @@ public class PetTeleportGameTests {
     }
 
     private static void removePlayer(ServerPlayer player) {
-        player.getServer().getPlayerList().remove(player);
+        player.level().getServer().getPlayerList().remove(player);
     }
 
     private static PetTeleportConfig.ConfigValues copyOf(PetTeleportConfig.ConfigValues values) {
