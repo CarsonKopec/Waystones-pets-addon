@@ -1,6 +1,5 @@
 package com.github.imagineforgee.waystonespetsaddon.gametest;
 
-import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import com.github.imagineforgee.waystonespetsaddon.common.PetFollowData;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
@@ -14,17 +13,16 @@ import net.blay09.mods.waystones.api.error.WaystoneTeleportError;
 import net.blay09.mods.waystones.api.event.WaystoneTeleportEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestAssertException;
-import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestFunction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -32,8 +30,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -42,43 +40,47 @@ import java.util.function.Function;
  * transport and event flow as well as this mod. Each test but the Nether one finishes within its first tick.
  */
 public class PetTeleportGameTests {
-    private static final String STRUCTURE = Constants.MOD_ID + ":pets_platform";
+    /**
+     * The tests by name. Each loader registers them as test functions in this mod's namespace, and the files of the
+     * same name in data/waystonespetsaddon/test_instance give them their structure and time limit.
+     */
+    public static final Map<String, Consumer<GameTestHelper>> TESTS = Map.ofEntries(
+            Map.entry("following_pet_teleports_with_owner", PetTeleportGameTests::followingPetTeleportsWithOwner),
+            Map.entry("staying_pet_stays_behind_and_sits", PetTeleportGameTests::stayingPetStaysBehindAndSits),
+            Map.entry("sitting_pet_stays_behind", PetTeleportGameTests::sittingPetStaysBehind),
+            Map.entry("pet_outside_radius_stays_behind", PetTeleportGameTests::petOutsideRadiusStaysBehind),
+            Map.entry("other_players_pet_stays_behind", PetTeleportGameTests::otherPlayersPetStaysBehind),
+            Map.entry("max_pets_takes_the_closest", PetTeleportGameTests::maxPetsTakesTheClosest),
+            Map.entry("cancelled_teleport_leaves_pets_alone", PetTeleportGameTests::cancelledTeleportLeavesPetsAlone),
+            Map.entry("pet_follows_into_another_dimension", PetTeleportGameTests::petFollowsIntoAnotherDimension),
+            Map.entry("switching_to_follows_stands_pet_up", PetTeleportGameTests::switchingToFollowsStandsPetUp),
+            Map.entry("stay_choice_survives_save_and_load", PetTeleportGameTests::stayChoiceSurvivesSaveAndLoad),
+            Map.entry("pet_list_is_closest_first_and_owned_only", PetTeleportGameTests::petListIsClosestFirstAndOwnedOnly));
+
     // High above the platform: farther than the default teleport radius, and clear of other tests' platforms.
     private static final BlockPos DESTINATION = new BlockPos(2, 40, 2);
     private static final BlockPos OWNER_POS = new BlockPos(2, 1, 2);
 
     private static boolean cancelNextTeleport;
+    private static boolean cancelListenerRegistered;
 
     /** Creates the tests' fake players. A loader whose rules vanilla's mock player breaks can swap in its own. */
     protected static Function<GameTestHelper, ServerPlayer> mockPlayerFactory = GameTestHelper::makeMockServerPlayerInLevel;
 
-    static {
-        // Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Pre handler ran.
+    /**
+     * Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Pre handler ran.
+     * Registered on first use, as loaders read {@link #TESTS} while mods are still loading, possibly before Balm.
+     */
+    private static void listenForCancelRequests() {
+        if (cancelListenerRegistered) {
+            return;
+        }
+        cancelListenerRegistered = true;
         Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, event -> {
             if (cancelNextTeleport) {
                 event.setCanceled(true);
             }
         }, EventPriority.Lowest);
-    }
-
-    @GameTestGenerator
-    public Collection<TestFunction> tests() {
-        return List.of(
-                test("following_pet_teleports_with_owner", PetTeleportGameTests::followingPetTeleportsWithOwner),
-                test("staying_pet_stays_behind_and_sits", PetTeleportGameTests::stayingPetStaysBehindAndSits),
-                test("sitting_pet_stays_behind", PetTeleportGameTests::sittingPetStaysBehind),
-                test("pet_outside_radius_stays_behind", PetTeleportGameTests::petOutsideRadiusStaysBehind),
-                test("other_players_pet_stays_behind", PetTeleportGameTests::otherPlayersPetStaysBehind),
-                test("max_pets_takes_the_closest", PetTeleportGameTests::maxPetsTakesTheClosest),
-                test("cancelled_teleport_leaves_pets_alone", PetTeleportGameTests::cancelledTeleportLeavesPetsAlone),
-                test("pet_follows_into_another_dimension", PetTeleportGameTests::petFollowsIntoAnotherDimension),
-                test("switching_to_follows_stands_pet_up", PetTeleportGameTests::switchingToFollowsStandsPetUp),
-                test("stay_choice_survives_save_and_load", PetTeleportGameTests::stayChoiceSurvivesSaveAndLoad),
-                test("pet_list_is_closest_first_and_owned_only", PetTeleportGameTests::petListIsClosestFirstAndOwnedOnly));
-    }
-
-    private static TestFunction test(String name, Consumer<GameTestHelper> body) {
-        return new TestFunction(Constants.MOD_ID, Constants.MOD_ID + "." + name, STRUCTURE, 100, 0, true, body);
     }
 
     private static void followingPetTeleportsWithOwner(GameTestHelper helper) {
@@ -131,7 +133,7 @@ public class PetTeleportGameTests {
     private static void otherPlayersPetStaysBehind(GameTestHelper helper) {
         ServerPlayer owner = spawnOwner(helper);
         ServerPlayer otherPlayer = spawnOwner(helper);
-        otherPlayer.moveTo(helper.absoluteVec(new Vec3(10.5, 1, 10.5)));
+        otherPlayer.snapTo(helper.absoluteVec(new Vec3(10.5, 1, 10.5)));
         Wolf othersPet = spawnPet(helper, otherPlayer, 3, 3);
         Vec3 start = othersPet.position();
 
@@ -173,6 +175,7 @@ public class PetTeleportGameTests {
         Vec3 stayerStart = stayer.position();
         Waystone destination = placeWaystone(helper.getLevel(), helper.absolutePos(DESTINATION));
 
+        listenForCancelRequests();
         cancelNextTeleport = true;
         WaystoneTeleportError error;
         try {
@@ -293,7 +296,7 @@ public class PetTeleportGameTests {
         ServerPlayer player = mockPlayerFactory.apply(helper);
         // Creative skips Waystones' XP and item costs, which are not what these tests are about.
         player.setGameMode(GameType.CREATIVE);
-        player.moveTo(helper.absoluteVec(Vec3.atBottomCenterOf(OWNER_POS)));
+        player.snapTo(helper.absoluteVec(Vec3.atBottomCenterOf(OWNER_POS)));
         return player;
     }
 
@@ -306,7 +309,7 @@ public class PetTeleportGameTests {
     private static Waystone placeWaystone(ServerLevel level, BlockPos pos) {
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
         return WaystonesAPI.placeWaystone(level, pos, WaystoneStyles.DEFAULT)
-                .orElseThrow(() -> new GameTestAssertException("Could not place a waystone at " + pos));
+                .orElseThrow(() -> new CheckFailed("Could not place a waystone at " + pos));
     }
 
     /**
@@ -327,7 +330,7 @@ public class PetTeleportGameTests {
     private static void teleport(ServerPlayer player, Waystone destination) {
         WaystoneTeleportError error = tryTeleport(player, destination);
         if (error != null) {
-            throw new GameTestAssertException("The waystone teleport failed: " + describe(error));
+            throw new CheckFailed("The waystone teleport failed: " + describe(error));
         }
     }
 
@@ -348,9 +351,24 @@ public class PetTeleportGameTests {
         check(!pet.isRemoved() && pet.position().distanceTo(start) < 1, message + " (pet moved to " + pet.position() + ")");
     }
 
+    /**
+     * A failed check, for helpers that have no GameTestHelper to ask for the tick. Test sequences only wait and retry
+     * on this exception type, so failures have to be one.
+     */
+    private static final class CheckFailed extends GameTestAssertException {
+        CheckFailed(String message) {
+            super(Component.literal(message), 0);
+        }
+
+        @Override
+        public Component getDescription() {
+            return message;
+        }
+    }
+
     private static void check(boolean condition, String message) {
         if (!condition) {
-            throw new GameTestAssertException(message);
+            throw new CheckFailed(message);
         }
     }
 

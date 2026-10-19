@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "waystonespetsaddon:pet_outside_radius_stays_behind",
+  "environment": "minecraft:default",
+  "structure": "waystonespetsaddon:pets_platform",
+  "max_ticks": 100
+}

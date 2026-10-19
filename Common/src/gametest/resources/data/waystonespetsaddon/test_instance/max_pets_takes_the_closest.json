@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "waystonespetsaddon:max_pets_takes_the_closest",
+  "environment": "minecraft:default",
+  "structure": "waystonespetsaddon:pets_platform",
+  "max_ticks": 100
+}

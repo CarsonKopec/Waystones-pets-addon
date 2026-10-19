@@ -12,7 +12,7 @@ public class PetFollowData {
     private static final String STAYS_KEY = Constants.MOD_ID + ":stays";
 
     public static boolean follows(TamableAnimal pet) {
-        return !Balm.getHooks().getPersistentData(pet).getBoolean(STAYS_KEY);
+        return !Balm.getHooks().getPersistentData(pet).getBooleanOr(STAYS_KEY, false);
     }
 
     public static void setFollows(TamableAnimal pet, boolean follows) {

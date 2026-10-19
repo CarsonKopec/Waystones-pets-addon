@@ -3,6 +3,7 @@ package com.github.imagineforgee.waystonespetsaddon.common.network;
 import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import net.blay09.mods.balm.api.Balm;
 import net.blay09.mods.balm.api.network.BalmNetworking;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
@@ -11,11 +12,11 @@ public class ModNetworking {
         BalmNetworking networking = Balm.getNetworking();
 
         networking.registerServerboundPacket(RequestPetListMessage.TYPE, RequestPetListMessage.class,
-                RequestPetListMessage::encode, RequestPetListMessage::decode, RequestPetListMessage::handle);
+                StreamCodec.of(RequestPetListMessage::encode, RequestPetListMessage::decode), RequestPetListMessage::handle);
         networking.registerClientboundPacket(PetListMessage.TYPE, PetListMessage.class,
-                PetListMessage::encode, PetListMessage::decode, PetListMessage::handle);
+                StreamCodec.of(PetListMessage::encode, PetListMessage::decode), PetListMessage::handle);
         networking.registerServerboundPacket(SetPetFollowsMessage.TYPE, SetPetFollowsMessage.class,
-                SetPetFollowsMessage::encode, SetPetFollowsMessage::decode, SetPetFollowsMessage::handle);
+                StreamCodec.of(SetPetFollowsMessage::encode, SetPetFollowsMessage::decode), SetPetFollowsMessage::handle);
     }
 
     static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {

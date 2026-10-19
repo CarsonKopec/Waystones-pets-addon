@@ -6,8 +6,8 @@
   "description": "Game tests for Waystones pets addon. Only used by the gametest run, never shipped.",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": [
-      "com.github.imagineforgee.waystonespetsaddon.gametest.PetTeleportGameTests"
+    "main": [
+      "com.github.imagineforgee.waystonespetsaddon.gametest.FabricGameTests"
     ]
   },
   "depends": {

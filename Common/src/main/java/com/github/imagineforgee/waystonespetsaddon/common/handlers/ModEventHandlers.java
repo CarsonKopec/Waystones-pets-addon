@@ -25,7 +25,7 @@ public class ModEventHandlers {
             // Waystones' own transportPets option has already queued every standing pet nearby, including ones told
             // to stay. This mod decides which pets go, so take them back out of Waystones' hands.
             context.getAdditionalEntities().removeIf(entity -> entity instanceof TamableAnimal pet
-                    && player.getUUID().equals(pet.getOwnerUUID()));
+                    && PetTeleportHandler.isOwnedBy(pet, player));
 
             // Leashed pets already travel with the player through Waystones' lead handling.
             List<TamableAnimal> pets = PetTeleportHandler.findNearbyPets(player).stream()

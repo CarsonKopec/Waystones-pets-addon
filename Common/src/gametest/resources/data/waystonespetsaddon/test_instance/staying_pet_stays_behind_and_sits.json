@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "waystonespetsaddon:staying_pet_stays_behind_and_sits",
+  "environment": "minecraft:default",
+  "structure": "waystonespetsaddon:pets_platform",
+  "max_ticks": 100
+}

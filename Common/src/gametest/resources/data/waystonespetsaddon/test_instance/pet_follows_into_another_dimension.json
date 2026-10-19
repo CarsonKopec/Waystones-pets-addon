@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "waystonespetsaddon:pet_follows_into_another_dimension",
+  "environment": "minecraft:default",
+  "structure": "waystonespetsaddon:pets_platform",
+  "max_ticks": 100
+}

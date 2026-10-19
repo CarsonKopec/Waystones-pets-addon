@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "waystonespetsaddon:following_pet_teleports_with_owner",
+  "environment": "minecraft:default",
+  "structure": "waystonespetsaddon:pets_platform",
+  "max_ticks": 100
+}

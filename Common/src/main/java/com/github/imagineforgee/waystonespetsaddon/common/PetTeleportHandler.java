@@ -6,7 +6,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityReference;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
@@ -14,11 +17,17 @@ import java.util.List;
 import java.util.Set;
 
 public class PetTeleportHandler {
+    /** Compares UUIDs, so unlike TamableAnimal.isOwnedBy it doesn't need the owner loaded in the pet's level. */
+    public static boolean isOwnedBy(TamableAnimal pet, Player player) {
+        EntityReference<LivingEntity> owner = pet.getOwnerReference();
+        return owner != null && owner.getUUID().equals(player.getUUID());
+    }
+
     /** The player's pets within teleport range, closest first. Also what the pet selection screen lists. */
     public static List<TamableAnimal> findNearbyPets(ServerPlayer player) {
         List<TamableAnimal> pets = player.level().getEntitiesOfClass(TamableAnimal.class,
                 player.getBoundingBox().inflate(PetTeleportConfig.values.teleportRadius),
-                pet -> pet.isTame() && player.getUUID().equals(pet.getOwnerUUID()));
+                pet -> pet.isTame() && isOwnedBy(pet, player));
         pets.sort(Comparator.comparingDouble(pet -> pet.distanceToSqr(player)));
         return pets;
     }

@@ -3,40 +3,34 @@ package com.github.imagineforgee.waystonespetsaddon.gametest;
 import com.github.imagineforgee.waystonespetsaddon.common.Constants;
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
-import net.minecraft.gametest.framework.GameTestGenerator;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestFunction;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-/**
- * Test-only mod that registers the shared game tests on NeoForge. NeoForge finds tests through {@link GameTestHolder},
- * which it reads from the class declaring the generator, so the generator is declared again here.
- */
+/** Test-only mod that registers the shared game tests on NeoForge. Their test instances come with its data. */
 @Mod(NeoForgeGameTests.MOD_ID)
-@GameTestHolder(Constants.MOD_ID)
-public class NeoForgeGameTests extends PetTeleportGameTests {
+public class NeoForgeGameTests {
     public static final String MOD_ID = "waystonespetsaddon_gametest";
 
-    static {
+    public NeoForgeGameTests(IEventBus modEventBus) {
+        DeferredRegister<Consumer<GameTestHelper>> tests = DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
+        PetTeleportGameTests.TESTS.forEach((name, test) -> tests.register(name, () -> test));
+        tests.register(modEventBus);
+
         // NeoForge only sends mod packets over connections that negotiated them, which vanilla's mock player never
         // does, so logging one in failed as soon as Balm synced Waystones' config to it.
-        mockPlayerFactory = NeoForgeGameTests::makeMockPlayer;
-    }
-
-    @Override
-    @GameTestGenerator
-    public Collection<TestFunction> tests() {
-        return super.tests();
+        PetTeleportGameTests.mockPlayerFactory = NeoForgeGameTests::makeMockPlayer;
     }
 
     /** Vanilla's makeMockServerPlayerInLevel, with a connection NeoForge treats as negotiated. */
