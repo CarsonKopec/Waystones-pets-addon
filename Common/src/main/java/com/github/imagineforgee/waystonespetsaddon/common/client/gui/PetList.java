@@ -4,7 +4,7 @@ import com.github.imagineforgee.waystonespetsaddon.common.network.PetListMessage
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -71,7 +71,7 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
         }
 
         @Override
-        public void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
             int left = getContentX();
             int top = getContentY();
             int width = getContentWidth();
@@ -95,12 +95,12 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
             int textLeft = left + MODEL_SIZE + 4;
             int textWidth = width - (textLeft - left) - BUTTON_WIDTH - 8;
             int textTop = top + (height - 19) / 2;
-            guiGraphics.drawString(font, clip(font, pet.name(), textWidth), textLeft, textTop, 0xFFFFFF);
-            guiGraphics.drawString(font, clip(font, details(sitting, distance), textWidth), textLeft, textTop + 10, 0xA0A0A0);
+            guiGraphics.text(font, clip(font, pet.name(), textWidth), textLeft, textTop, 0xFFFFFFFF);
+            guiGraphics.text(font, clip(font, details(sitting, distance), textWidth), textLeft, textTop + 10, 0xFFA0A0A0);
 
             followButton.setX(left + width - BUTTON_WIDTH - 4);
             followButton.setY(top + (height - 20) / 2);
-            followButton.render(guiGraphics, mouseX, mouseY, partialTick);
+            followButton.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         }
 
         // Rows render every frame, so only rebuild the text when what it shows has changed.
@@ -116,10 +116,10 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
 
         // Scaled by the pet's hitbox so parrots, cats and large modded pets all fill the square about equally.
         // The vanilla renderer clips to the square, so rows scrolled half out of the list don't spill over.
-        private static void renderModel(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int mouseX, int mouseY) {
+        private static void renderModel(GuiGraphicsExtractor guiGraphics, LivingEntity entity, int x, int y, int mouseX, int mouseY) {
             float largestSide = Math.max(entity.getBbHeight(), entity.getBbWidth());
             int scale = Math.max(1, (int) (MODEL_SIZE * 0.8f / largestSide));
-            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, x, y, x + MODEL_SIZE, y + MODEL_SIZE,
+            InventoryScreen.extractEntityInInventoryFollowsMouse(guiGraphics, x, y, x + MODEL_SIZE, y + MODEL_SIZE,
                     scale, 0.0625f, mouseX, mouseY, entity);
         }
 

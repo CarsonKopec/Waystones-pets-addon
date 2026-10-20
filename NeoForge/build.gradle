@@ -76,6 +76,14 @@ dependencies {
     implementation("net.blay09.mods:waystones-neoforge:${waystones_version}") {
         transitive = false
     }
+    // Waystones' teleport context builds on Shogi's, and Waystones needs Shogi at runtime; players install it
+    // alongside Waystones.
+    compileOnly("net.blay09.mods:shogi-api:${shogi_api_version}") {
+        transitive = false
+    }
+    runtimeOnly("net.blay09.mods:shogi-neoforge:${shogi_version}") {
+        transitive = false
+    }
     compileOnly project(":Common")
 }
 

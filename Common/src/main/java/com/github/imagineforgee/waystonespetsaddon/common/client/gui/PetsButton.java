@@ -2,7 +2,7 @@ package com.github.imagineforgee.waystonespetsaddon.common.client.gui;
 
 import net.blay09.mods.balm.client.gui.screens.BalmScreenUtils;
 import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -40,8 +40,8 @@ public class PetsButton extends Button {
     }
 
     @Override
-    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderDefaultSprite(guiGraphics);
-        guiGraphics.renderItem(ICON, getX() + (SIZE - 16) / 2, getY() + (SIZE - 16) / 2);
+    protected void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        extractDefaultSprite(guiGraphics);
+        guiGraphics.item(ICON, getX() + (SIZE - 16) / 2, getY() + (SIZE - 16) / 2);
     }
 }

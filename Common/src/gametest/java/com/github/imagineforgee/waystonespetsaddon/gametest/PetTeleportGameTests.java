@@ -6,7 +6,7 @@ import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
 import com.github.imagineforgee.waystonespetsaddon.common.network.SetPetFollowsMessage;
 import net.blay09.mods.balm.platform.event.EventPhases;
 import net.blay09.mods.waystones.api.Waystone;
-import net.blay09.mods.waystones.api.WaystoneStyles;
+import net.blay09.mods.waystones.api.WaystoneTypes;
 import net.blay09.mods.waystones.api.WaystonesAPI;
 import net.blay09.mods.waystones.api.error.WaystoneTeleportError;
 import net.blay09.mods.waystones.api.event.WaystoneTeleportEvent;
@@ -197,10 +197,10 @@ public class PetTeleportGameTests {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
         check(nether != null, "The test server should have a Nether");
         // The middle of a chunk, so the owner and the pet both land in that chunk.
-        BlockPos netherPos = new ChunkPos(helper.absolutePos(OWNER_POS)).getMiddleBlockPosition(100);
-        ChunkPos chunk = new ChunkPos(netherPos);
+        BlockPos netherPos = ChunkPos.containing(helper.absolutePos(OWNER_POS)).getMiddleBlockPosition(100);
+        ChunkPos chunk = ChunkPos.containing(netherPos);
         // A real player arriving keeps the chunk loaded; the mock player does not, so load it the same way.
-        nether.setChunkForced(chunk.x, chunk.z, true);
+        nether.setChunkForced(chunk.x(), chunk.z(), true);
         // A chunk's entities only show up once every chunk within two of it has generated. Left to the worker threads,
         // that sometimes took longer than the whole test, as the game test server runs ticks as fast as it can.
         generateChunksAround(nether, chunk, 2);
@@ -221,7 +221,7 @@ public class PetTeleportGameTests {
                     Entity arrived = nether.getEntity(pet.getUUID());
                     check(arrived instanceof Wolf, "The pet should have followed its owner into the Nether (wolves near the owner there: "
                             + nether.getEntitiesOfClass(Wolf.class, owner.getBoundingBox().inflate(16)).size()
-                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(chunk.toLong()) + ")");
+                            + ", chunk entities loaded: " + nether.areEntitiesLoaded(chunk.pack()) + ")");
                     assertNextTo(arrived, owner, "The pet should arrive next to its owner in the Nether");
                 })
                 .thenExecute(() -> {
@@ -230,14 +230,14 @@ public class PetTeleportGameTests {
                         arrived.discard();
                     }
                     removePlayer(owner);
-                    nether.setChunkForced(chunk.x, chunk.z, false);
+                    nether.setChunkForced(chunk.x(), chunk.z(), false);
                 })
                 .thenSucceed();
     }
 
     private static void generateChunksAround(ServerLevel level, ChunkPos center, int radius) {
-        for (int x = center.x - radius; x <= center.x + radius; x++) {
-            for (int z = center.z - radius; z <= center.z + radius; z++) {
+        for (int x = center.x() - radius; x <= center.x() + radius; x++) {
+            for (int z = center.z() - radius; z <= center.z() + radius; z++) {
                 level.getChunk(x, z);
             }
         }
@@ -312,7 +312,7 @@ public class PetTeleportGameTests {
 
     private static Waystone placeWaystone(ServerLevel level, BlockPos pos) {
         level.setBlockAndUpdate(pos.below(), Blocks.STONE.defaultBlockState());
-        return WaystonesAPI.placeWaystone(level, pos, WaystoneStyles.DEFAULT)
+        return WaystonesAPI.placeWaystone(level, pos, WaystoneTypes.ANDESITE)
                 .orElseThrow(() -> new CheckFailed("Could not place a waystone at " + pos));
     }
 

@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom'
+    id 'net.fabricmc.fabric-loom'
     id 'maven-publish'
     id 'idea'
     id 'net.darkhax.curseforgegradle'
@@ -30,23 +30,30 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     // Its POM lists optional integrations (JEI, JourneyMap's networking...) that aren't needed and aren't always
     // published; the Waystones jar bundles what it does need.
-    modImplementation("net.blay09.mods:waystones-fabric:${waystones_version}") {
+    implementation("net.blay09.mods:waystones-fabric:${waystones_version}") {
         transitive = false
     }
-    modImplementation("net.blay09.mods:balm-fabric:${balm_version}") {
+    implementation("net.blay09.mods:balm-fabric:${balm_version}") {
         exclude(group: "net.blay09.mods", module: "shared-bridge")
         exclude group: "net.fabricmc", module: "fabric-loader"
         transitive = false
         changing = balm_version.endsWith("SNAPSHOT")
     }
+    // Waystones' teleport context builds on Shogi's, and Waystones needs Shogi at runtime; players install it
+    // alongside Waystones.
+    compileOnly("net.blay09.mods:shogi-api:${shogi_api_version}") {
+        transitive = false
+    }
+    runtimeOnly("net.blay09.mods:shogi-fabric:${shogi_version}") {
+        transitive = false
+    }
     implementation 'com.electronwill.night-config:core:3.6.5'
     implementation 'com.electronwill.night-config:toml:3.6.5'
-    modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
+    implementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
     implementation project(":Common")
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 
@@ -157,7 +164,7 @@ configurations.all {
 
 
 tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
-    dependsOn remapJar
+    dependsOn jar
     description = 'Publishes the Fabric build to CurseForge.'
     group = 'publishing'
 
@@ -170,7 +177,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
     }
 
     if (projectId) {
-        def mainFile = upload(projectId, remapJar.archiveFile.get().asFile)
+        def mainFile = upload(projectId, jar.archiveFile.get().asFile)
         mainFile.changelog = rootProject.file('CHANGELOG.md').text
         mainFile.addModLoader("Fabric")
         mainFile.addRequirement("fabric-api")
@@ -190,7 +197,7 @@ modrinth {
     versionName = base.archivesName.get()
     versionNumber = mod_version
     versionType = release_type
-    uploadFile = remapJar
+    uploadFile = jar
     gameVersions = fabric_game_versions.split(',').collect { it.trim() }
     loaders = ["fabric"]
     dependencies {

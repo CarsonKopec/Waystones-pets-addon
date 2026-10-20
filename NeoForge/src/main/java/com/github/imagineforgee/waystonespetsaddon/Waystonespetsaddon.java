@@ -18,7 +18,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 public class Waystonespetsaddon {
 
     public Waystonespetsaddon(IEventBus modEventBus, ModContainer modContainer) {
-        NeoForgeLoadContext loadContext = new NeoForgeLoadContext(modEventBus);
+        NeoForgeLoadContext loadContext = new NeoForgeLoadContext(modContainer, modEventBus);
         Balm.initializeMod(Constants.MOD_ID, loadContext, registrars -> Common.initialize());
         if (FMLEnvironment.getDist().isClient()) {
             BalmClient.initializeMod(Constants.MOD_ID, loadContext, registrars -> CommonClient.initialize());

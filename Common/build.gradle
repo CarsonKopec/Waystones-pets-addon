@@ -37,6 +37,10 @@ dependencies {
     }
 
     compileOnly "net.blay09.mods:waystones-common:${waystones_version}"
+    // Waystones' teleport context builds on Shogi's.
+    compileOnly("net.blay09.mods:shogi-api:${shogi_api_version}") {
+        transitive = false
+    }
 }
 
 sourceSets.main.resources.srcDir('src/generated/resources')
