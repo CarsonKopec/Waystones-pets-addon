@@ -1,5 +1,6 @@
 0.1.1
 - Fabric: works with any Fabric Loader from 0.14 on. 0.1.0 only loaded on Fabric Loader 0.17.2.
+- The pet list uses more of the screen's width, so details like "Sitting, won't teleport" are no longer cut off. A line that still doesn't fit ends in "...".
 
 Fixed missing pack.mcmeta error
 
