@@ -86,7 +86,7 @@ public class PetSelectionScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(font, title, width / 2, 15, 0xFFFFFF);
+        guiGraphics.drawCenteredString(font, title, width / 2, 15, 0xFFFFFFFF);
 
         Component status = null;
         if (petList == null) {
@@ -95,7 +95,7 @@ public class PetSelectionScreen extends Screen {
                     : "gui.waystonespetsaddon.no_response");
         } else {
             guiGraphics.drawCenteredString(font, Component.translatable("gui.waystonespetsaddon.pet_selection.subtitle",
-                    formatBlocks(petList.teleportRadius()), petList.maxPetsToTeleport()), width / 2, 27, 0xA0A0A0);
+                    formatBlocks(petList.teleportRadius()), petList.maxPetsToTeleport()), width / 2, 27, 0xFFA0A0A0);
             if (petList.pets().isEmpty()) {
                 status = Component.translatable("gui.waystonespetsaddon.no_pets");
             }
@@ -105,7 +105,7 @@ public class PetSelectionScreen extends Screen {
             List<FormattedCharSequence> lines = font.split(status, width - 40);
             int y = (LIST_TOP + height - LIST_BOTTOM_MARGIN) / 2 - lines.size() * font.lineHeight / 2;
             for (FormattedCharSequence line : lines) {
-                guiGraphics.drawCenteredString(font, line, width / 2, y, 0xA0A0A0);
+                guiGraphics.drawCenteredString(font, line, width / 2, y, 0xFFA0A0A0);
                 y += font.lineHeight;
             }
         }
