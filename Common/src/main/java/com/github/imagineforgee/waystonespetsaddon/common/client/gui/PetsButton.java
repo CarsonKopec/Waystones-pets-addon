@@ -4,6 +4,7 @@ import net.blay09.mods.balm.api.client.BalmClient;
 import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -35,9 +36,18 @@ public class PetsButton extends Button {
             return;
         }
 
-        int x = searchBox.getX() + searchBox.getWidth() + 4;
+        // Go past anything Waystones puts after the search box on its row, like the sort button some versions have,
+        // which would otherwise sit under this button and take its clicks.
+        int searchBoxRight = searchBox.getX() + searchBox.getWidth();
+        int right = searchBoxRight;
+        for (GuiEventListener child : screen.children()) {
+            if (child instanceof AbstractWidget widget && widget.getX() >= searchBoxRight
+                    && widget.getY() < searchBox.getY() + searchBox.getHeight() && searchBox.getY() < widget.getY() + widget.getHeight()) {
+                right = Math.max(right, widget.getX() + widget.getWidth());
+            }
+        }
         BalmClient.getScreens().addRenderableWidget(screen,
-                new PetsButton(x, searchBox.getY(), button -> PetSelectionScreen.open(screen)));
+                new PetsButton(right + 4, searchBox.getY(), button -> PetSelectionScreen.open(screen)));
     }
 
     @Override
