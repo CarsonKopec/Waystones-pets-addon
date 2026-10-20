@@ -3,7 +3,6 @@ package com.github.imagineforgee.waystonespetsaddon.common;
 import com.github.imagineforgee.waystonespetsaddon.common.api.PlatformAbstractions;
 import com.github.imagineforgee.waystonespetsaddon.common.api.TickDelayedTaskManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityReference;
@@ -38,12 +37,7 @@ public class PetTeleportHandler {
      * @param nearbyPets the pets that were near the player before they teleported
      */
     public static void handleTeleport(ServerPlayer player, List<TamableAnimal> nearbyPets, Vec3 targetVec, ServerLevel targetLevel) {
-        Vec3i targetVecI = new Vec3i(
-                (int) Math.floor(targetVec.x),
-                (int) Math.floor(targetVec.y),
-                (int) Math.floor(targetVec.z)
-        );
-        BlockPos targetPos = new BlockPos(targetVecI);
+        BlockPos targetPos = BlockPos.containing(targetVec);
 
         nearbyPets = nearbyPets.stream().filter(pet -> !pet.isRemoved()).toList();
 

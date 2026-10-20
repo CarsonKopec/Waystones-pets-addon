@@ -23,7 +23,7 @@ public class Waystonespetsaddon {
         if (FMLEnvironment.getDist().isClient()) {
             BalmClient.initializeMod(Constants.MOD_ID, loadContext, registrars -> CommonClient.initialize());
         }
-        modContainer.registerConfig(ModConfig.Type.COMMON, NeoForgeConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.LOCAL, NeoForgeConfig.SPEC);
         modEventBus.addListener((ModConfigEvent e) -> {
             if (e.getConfig().getSpec() == NeoForgeConfig.SPEC) {
                 NeoForgeConfig.CONFIG.applyToCommon();
