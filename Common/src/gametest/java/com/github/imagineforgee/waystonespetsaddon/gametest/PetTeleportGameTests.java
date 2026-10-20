@@ -4,8 +4,7 @@ import com.github.imagineforgee.waystonespetsaddon.common.PetFollowData;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
 import com.github.imagineforgee.waystonespetsaddon.common.network.SetPetFollowsMessage;
-import net.blay09.mods.balm.api.Balm;
-import net.blay09.mods.balm.api.event.EventPriority;
+import net.blay09.mods.balm.platform.event.EventPhases;
 import net.blay09.mods.waystones.api.Waystone;
 import net.blay09.mods.waystones.api.WaystoneStyles;
 import net.blay09.mods.waystones.api.WaystonesAPI;
@@ -71,7 +70,7 @@ public class PetTeleportGameTests {
     protected static Function<GameTestHelper, ServerPlayer> mockPlayerFactory = GameTestHelper::makeMockServerPlayerInLevel;
 
     /**
-     * Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Pre handler ran.
+     * Lets a test deny a teleport the way an XP cost or another mod would, after this mod's Before handler ran.
      * Registered on first use, as loaders read {@link #TESTS} while mods are still loading, possibly before Balm.
      */
     private static void listenForCancelRequests() {
@@ -79,11 +78,11 @@ public class PetTeleportGameTests {
             return;
         }
         cancelListenerRegistered = true;
-        Balm.getEvents().onEvent(WaystoneTeleportEvent.Pre.class, event -> {
+        WaystoneTeleportEvent.Before.EVENT.register(EventPhases.LOWEST, event -> {
             if (cancelNextTeleport) {
                 event.setCanceled(true);
             }
-        }, EventPriority.Lowest);
+        });
     }
 
     private static void followingPetTeleportsWithOwner(GameTestHelper helper) {
@@ -348,8 +347,8 @@ public class PetTeleportGameTests {
 
     private static void assertNextTo(Entity pet, ServerPlayer owner, String message) {
         check(pet.level() == owner.level() && pet.distanceTo(owner) < 3,
-                message + " (pet at " + pet.position() + " in " + pet.level().dimension().location()
-                        + ", owner at " + owner.position() + " in " + owner.level().dimension().location() + ")");
+                message + " (pet at " + pet.position() + " in " + pet.level().dimension().identifier()
+                        + ", owner at " + owner.position() + " in " + owner.level().dimension().identifier() + ")");
     }
 
     private static void assertStayed(Entity pet, Vec3 start, String message) {

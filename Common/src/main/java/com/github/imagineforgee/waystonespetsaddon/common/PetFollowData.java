@@ -1,6 +1,6 @@
 package com.github.imagineforgee.waystonespetsaddon.common;
 
-import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.balm.Balm;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.TamableAnimal;
 
@@ -12,11 +12,11 @@ public class PetFollowData {
     private static final String STAYS_KEY = Constants.MOD_ID + ":stays";
 
     public static boolean follows(TamableAnimal pet) {
-        return !Balm.getHooks().getPersistentData(pet).getBooleanOr(STAYS_KEY, false);
+        return !Balm.hooks().getPersistentData(pet).getBooleanOr(STAYS_KEY, false);
     }
 
     public static void setFollows(TamableAnimal pet, boolean follows) {
-        CompoundTag data = Balm.getHooks().getPersistentData(pet);
+        CompoundTag data = Balm.hooks().getPersistentData(pet);
         if (follows) {
             data.remove(STAYS_KEY);
         } else {
@@ -24,6 +24,6 @@ public class PetFollowData {
         }
         // Balm 21 hands out a tag that isn't saved yet while the pet has no Balm data, and only takes it over on the
         // next lookup once it holds something. Look it up again, so the choice is saved even if the world closes first.
-        Balm.getHooks().getPersistentData(pet);
+        Balm.hooks().getPersistentData(pet);
     }
 }

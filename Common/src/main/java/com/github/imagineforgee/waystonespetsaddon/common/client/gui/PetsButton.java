@@ -1,8 +1,7 @@
 package com.github.imagineforgee.waystonespetsaddon.common.client.gui;
 
-import net.blay09.mods.balm.api.client.BalmClient;
+import net.blay09.mods.balm.client.gui.screens.BalmScreenUtils;
 import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -36,12 +35,13 @@ public class PetsButton extends Button {
         }
 
         int x = searchBox.getX() + searchBox.getWidth() + 4;
-        BalmClient.getScreens().addRenderableWidget(screen,
+        BalmScreenUtils.addRenderableWidget(screen,
                 new PetsButton(x, searchBox.getY(), button -> PetSelectionScreen.open(screen)));
     }
 
     @Override
-    public void renderString(GuiGraphics guiGraphics, Font font, int color) {
+    protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        renderDefaultSprite(guiGraphics);
         guiGraphics.renderItem(ICON, getX() + (SIZE - 16) / 2, getY() + (SIZE - 16) / 2);
     }
 }

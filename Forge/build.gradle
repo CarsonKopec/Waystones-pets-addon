@@ -71,9 +71,14 @@ dependencies {
     implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
     // Their POMs list Balm's common jar and libraries the mod jars already bundle; on Forge's module path those
     // duplicate packages stop the game from starting.
+    // Balm's default jar here is a slim one that lists a nested Kuma jar without containing it, which stops Forge
+    // from starting. The full jar, the one players install, has Kuma inside.
     implementation("net.blay09.mods:balm-forge:${balm_forge_version}") {
         transitive = false
         changing = balm_forge_version.endsWith("SNAPSHOT")
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
+        }
     }
     implementation("net.blay09.mods:waystones-forge:${waystones_version}") {
         transitive = false

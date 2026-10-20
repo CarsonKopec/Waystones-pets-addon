@@ -3,7 +3,7 @@ package com.github.imagineforgee.waystonespetsaddon.common.network;
 import com.github.imagineforgee.waystonespetsaddon.common.PetFollowData;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportConfig;
 import com.github.imagineforgee.waystonespetsaddon.common.PetTeleportHandler;
-import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.balm.Balm;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,7 +39,7 @@ public record RequestPetListMessage() implements CustomPacketPayload {
                         PetFollowData.follows(pet)))
                 .toList();
 
-        Balm.getNetworking().sendTo(player, new PetListMessage(pets,
+        Balm.networking().sendTo(player, new PetListMessage(pets,
                 PetTeleportConfig.values.teleportRadius,
                 PetTeleportConfig.values.maxPetsToTeleport,
                 PetTeleportConfig.values.teleportSittingPets));

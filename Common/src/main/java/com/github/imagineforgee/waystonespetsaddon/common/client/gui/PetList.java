@@ -64,8 +64,7 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
         private Entry(PetListMessage.Pet pet, boolean follows, boolean teleportSittingPets, Consumer<Boolean> onFollowsChanged) {
             this.pet = pet;
             this.teleportSittingPets = teleportSittingPets;
-            this.followButton = CycleButton.booleanBuilder(FOLLOWS, STAYS)
-                    .withInitialValue(follows)
+            this.followButton = CycleButton.booleanBuilder(FOLLOWS, STAYS, follows)
                     .withTooltip(value -> value ? FOLLOWS_TOOLTIP : STAYS_TOOLTIP)
                     .displayOnlyValue()
                     .create(0, 0, BUTTON_WIDTH, 20, pet.name(), (button, value) -> onFollowsChanged.accept(value));

@@ -3,7 +3,7 @@ package com.github.imagineforgee.waystonespetsaddon.common.client.gui;
 import com.github.imagineforgee.waystonespetsaddon.common.network.PetListMessage;
 import com.github.imagineforgee.waystonespetsaddon.common.network.RequestPetListMessage;
 import com.github.imagineforgee.waystonespetsaddon.common.network.SetPetFollowsMessage;
-import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.balm.Balm;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -41,7 +41,7 @@ public class PetSelectionScreen extends Screen {
 
     public static void open(Screen parent) {
         Minecraft.getInstance().setScreen(new PetSelectionScreen(parent));
-        Balm.getNetworking().sendToServer(new RequestPetListMessage());
+        Balm.networking().sendToServer(new RequestPetListMessage());
     }
 
     public static void handlePetList(PetListMessage message) {
@@ -73,7 +73,7 @@ public class PetSelectionScreen extends Screen {
 
     private void setFollows(PetListMessage.Pet pet, boolean follows) {
         followStates.put(pet.id(), follows);
-        Balm.getNetworking().sendToServer(new SetPetFollowsMessage(pet.id(), follows));
+        Balm.networking().sendToServer(new SetPetFollowsMessage(pet.id(), follows));
     }
 
     @Override

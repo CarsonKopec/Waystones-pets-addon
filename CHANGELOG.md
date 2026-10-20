@@ -1,5 +1,5 @@
 0.1.1
-- Ported to Minecraft 1.21.9 to 1.21.10 for Fabric and NeoForge, and 1.21.10 for Forge.
+- Ported to Minecraft 1.21.11 for Fabric, Forge and NeoForge.
 
 0.1.0
 - Ported to Minecraft 1.20.4 (the Fabric build also runs on 1.20.3) and 1.20.6, for Fabric, Forge and NeoForge.
