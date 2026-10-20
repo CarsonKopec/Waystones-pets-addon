@@ -102,6 +102,15 @@ loom {
             vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.file("gametest/report.xml").get().asFile}"
             runDir "build/gametest"
         }
+        // ./gradlew :Fabric:runClientGametest opens a game window, plays through the pet screens in a new singleplayer
+        // world, saves screenshots to build/clientgametest/screenshots and exits non-zero on failure.
+        clientGametest {
+            client()
+            setConfigName("Fabric Client Game Tests")
+            source sourceSets.gametest
+            vmArg "-Dfabric.client.gametest"
+            runDir "build/clientgametest"
+        }
     }
 }
 
@@ -109,6 +118,12 @@ loom {
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGametest' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
+}
+tasks.matching { it.name == 'runClientGametest' }.configureEach {
+    doFirst {
+        project.delete(file('build/clientgametest/saves'), file('build/clientgametest/config'),
+                file('build/clientgametest/screenshots'))
+    }
 }
 
 afterEvaluate {
