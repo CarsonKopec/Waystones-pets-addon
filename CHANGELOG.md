@@ -1,5 +1,6 @@
 0.1.1
 - Ported to Minecraft 1.21.3 for Fabric and NeoForge; the NeoForge build also runs on 1.21.2. (Waystones has no Forge build for 1.21.3.)
+- The pet list uses more of the screen's width, so details like "Sitting, won't teleport" are no longer cut off. A line that still doesn't fit ends in "...".
 
 0.1.0
 - Ported to Minecraft 1.20.4 (the Fabric build also runs on 1.20.3) and 1.20.6, for Fabric, Forge and NeoForge.
