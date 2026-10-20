@@ -44,6 +44,11 @@ dependencies {
         transitive = false
         changing = balm_version.endsWith("SNAPSHOT")
     }
+    // Balm's jar nests Kuma, which Waystones' menus use, but Loom leaves nested jars off the dev classpath: without
+    // this, a dev client crashes as soon as it opens a waystone.
+    modRuntimeOnly("net.blay09.mods:kuma-api-fabric:${kuma_version}") {
+        transitive = false
+    }
     implementation 'com.electronwill.night-config:core:3.6.5'
     implementation 'com.electronwill.night-config:toml:3.6.5'
     modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${forge_config_version}"
