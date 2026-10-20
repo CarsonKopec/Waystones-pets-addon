@@ -96,8 +96,8 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
             int textLeft = left + MODEL_SIZE + 4;
             int textWidth = width - (textLeft - left) - BUTTON_WIDTH - 8;
             int textTop = top + (height - 19) / 2;
-            guiGraphics.drawString(font, clip(font, pet.name(), textWidth), textLeft, textTop, 0xFFFFFF);
-            guiGraphics.drawString(font, clip(font, details(sitting, distance), textWidth), textLeft, textTop + 10, 0xA0A0A0);
+            guiGraphics.drawString(font, clip(font, pet.name(), textWidth), textLeft, textTop, 0xFFFFFFFF);
+            guiGraphics.drawString(font, clip(font, details(sitting, distance), textWidth), textLeft, textTop + 10, 0xFFA0A0A0);
 
             followButton.setX(left + width - BUTTON_WIDTH - 4);
             followButton.setY(top + (height - 20) / 2);
