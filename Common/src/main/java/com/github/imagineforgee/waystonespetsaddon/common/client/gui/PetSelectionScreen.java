@@ -40,12 +40,12 @@ public class PetSelectionScreen extends Screen {
     }
 
     public static void open(Screen parent) {
-        Minecraft.getInstance().setScreen(new PetSelectionScreen(parent));
+        Minecraft.getInstance().gui.setScreen(new PetSelectionScreen(parent));
         Balm.networking().sendToServer(new RequestPetListMessage());
     }
 
     public static void handlePetList(PetListMessage message) {
-        if (Minecraft.getInstance().screen instanceof PetSelectionScreen screen) {
+        if (Minecraft.getInstance().gui.screen() instanceof PetSelectionScreen screen) {
             screen.petList = message;
             screen.followStates.clear();
             for (PetListMessage.Pet pet : message.pets()) {
@@ -117,7 +117,7 @@ public class PetSelectionScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override

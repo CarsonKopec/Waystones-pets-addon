@@ -20,7 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.level.ChunkPos;
@@ -270,7 +270,7 @@ public class PetTeleportGameTests {
         TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
         pet.saveWithoutId(output);
         CompoundTag saved = output.buildResult();
-        Wolf reloaded = EntityType.WOLF.create(helper.getLevel(), EntitySpawnReason.LOAD);
+        Wolf reloaded = EntityTypes.WOLF.create(helper.getLevel(), EntitySpawnReason.LOAD);
         check(reloaded != null, "Could not create a wolf to load into");
         reloaded.load(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), saved));
 
@@ -305,7 +305,7 @@ public class PetTeleportGameTests {
     }
 
     private static Wolf spawnPet(GameTestHelper helper, ServerPlayer owner, int x, int z) {
-        Wolf wolf = helper.spawn(EntityType.WOLF, new BlockPos(x, 1, z));
+        Wolf wolf = helper.spawn(EntityTypes.WOLF, new BlockPos(x, 1, z));
         wolf.tame(owner);
         return wolf;
     }
