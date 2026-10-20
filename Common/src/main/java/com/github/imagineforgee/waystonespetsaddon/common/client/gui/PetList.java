@@ -12,7 +12,9 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -25,7 +27,11 @@ import java.util.function.Consumer;
 
 /** One row per pet: a small model, its name and details, and a Follows/Stays toggle on the right. */
 public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
-    private static final int ROW_WIDTH = 280;
+    // Wide enough to show a pet's details in full, up to "Parrot - 10 blocks away - Sitting, won't teleport", where
+    // the screen has room. Narrower screens shorten them with an ellipsis.
+    private static final int MAX_ROW_WIDTH = 380;
+    // Keeps the rows, and the scroll bar to their right, clear of the screen's edges.
+    private static final int MIN_SIDE_MARGIN = 20;
     private static final int ROW_HEIGHT = 24;
     private static final int MODEL_SIZE = 24;
     private static final int BUTTON_WIDTH = 80;
@@ -45,12 +51,12 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
 
     @Override
     public int getRowWidth() {
-        return ROW_WIDTH;
+        return Math.min(MAX_ROW_WIDTH, width - 2 * MIN_SIDE_MARGIN);
     }
 
     @Override
     protected int scrollBarX() {
-        return width / 2 + ROW_WIDTH / 2 + 6;
+        return width / 2 + getRowWidth() / 2 + 6;
     }
 
     public class Entry extends ContainerObjectSelectionList.Entry<Entry> {
@@ -154,7 +160,13 @@ public class PetList extends ContainerObjectSelectionList<PetList.Entry> {
         return details;
     }
 
+    // Ends text that doesn't fit with an ellipsis, so it's clear something was left out.
     private static FormattedCharSequence clip(Font font, Component text, int maxWidth) {
-        return Language.getInstance().getVisualOrder(font.substrByWidth(text, maxWidth));
+        FormattedText shown = text;
+        if (font.width(text) > maxWidth) {
+            shown = FormattedText.composite(
+                    font.substrByWidth(text, maxWidth - font.width(CommonComponents.ELLIPSIS)), CommonComponents.ELLIPSIS);
+        }
+        return Language.getInstance().getVisualOrder(shown);
     }
 }
