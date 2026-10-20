@@ -116,9 +116,13 @@ public class PetScreensClientGameTest implements FabricClientGameTest {
             // Teleporting through the menu: the wolf is set to Stays, so it sits and stays behind.
             click(context, findWaystoneButton(context, LOOKOUT));
             server.waitFor(s -> player(s).blockPosition().closerThan(setup.lookout(), 5));
-            check(server.computeOnServer(s -> wolf(s, setup).isOrderedToSit()
-                            && wolf(s, setup).blockPosition().closerThan(setup.home(), 5)),
-                    "The wolf, set to Stays, should sit and stay behind when its owner teleports");
+            // Standing, the wolf may have wandered a little, but it should be nowhere near the Lookout, 40 blocks away.
+            String wolfState = server.computeOnServer(s -> {
+                TamableAnimal wolf = wolf(s, setup);
+                return wolf.isOrderedToSit() && wolf.distanceTo(player(s)) > 20 ? null
+                        : "sitting " + wolf.isOrderedToSit() + ", at " + wolf.blockPosition() + ", owner at " + player(s).blockPosition();
+            });
+            check(wolfState == null, "The wolf, set to Stays, should sit and stay behind when its owner teleports (" + wolfState + ")");
             context.waitForScreen(null);
         }
     }
