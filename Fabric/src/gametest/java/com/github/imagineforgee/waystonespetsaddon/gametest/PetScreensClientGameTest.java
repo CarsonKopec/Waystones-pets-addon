@@ -10,7 +10,7 @@ import net.blay09.mods.waystones.api.Waystone;
 import net.blay09.mods.waystones.api.WaystoneTypes;
 import net.blay09.mods.waystones.api.WaystonesAPI;
 import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
-import net.blay09.mods.waystones.client.gui.widget.AbstractWaystoneButton;
+import net.blay09.mods.waystones.client.gui.widget.WaystoneButton;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
@@ -238,7 +238,7 @@ public class PetScreensClientGameTest implements FabricClientGameTest {
     }
 
     private static AbstractWidget findWaystoneButton(ClientGameTestContext context, String name) {
-        return find(context, widget -> widget instanceof AbstractWaystoneButton
+        return find(context, widget -> widget instanceof WaystoneButton
                 && widget.getMessage().getString().contains(name), "the " + name + " waystone in the menu");
     }
 
