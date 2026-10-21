@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
@@ -31,6 +32,10 @@ public class ForgeGameTests {
         tests.register(context.getModEventBus());
 
         MinecraftForge.EVENT_BUS.addListener(ForgeGameTests::startLikeARealServer);
+
+        if (FMLEnvironment.dist.isClient()) {
+            PetScreensClientCheck.startIfRequested();
+        }
     }
 
     /**
