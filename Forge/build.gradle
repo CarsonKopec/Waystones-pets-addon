@@ -82,6 +82,26 @@ minecraft {
             }
         }
 
+        // ./gradlew :Forge:runClientCheck opens a game window, plays through the pet screens in a new world, saves
+        // screenshots to build/clientcheck/screenshots and exits non-zero on failure.
+        clientCheck {
+            parent runs.client
+            workingDirectory project.file('build/clientcheck')
+            ideaModule "${rootProject.name}.${project.name}.gametest"
+            taskName 'runClientCheck'
+            property 'waystonespetsaddon.clientcheck', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                modClientCheckRun {
+                    source sourceSets.main
+                }
+                modClientCheckTests {
+                    source sourceSets.gametest
+                }
+            }
+        }
+
         data {
             workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
@@ -103,6 +123,16 @@ minecraft {
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'GameTestServer' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
+}
+tasks.matching { it.name == 'runClientCheck' }.configureEach {
+    doFirst {
+        def dir = file('build/clientcheck')
+        project.delete(new File(dir, 'saves'), new File(dir, 'config'), new File(dir, 'screenshots'))
+        dir.mkdirs()
+        // Skips the first-launch screens, keeps the game going while its window is in the background, and mutes it.
+        new File(dir, 'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\njoinedFirstServer:true\n' +
+                'pauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+    }
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'

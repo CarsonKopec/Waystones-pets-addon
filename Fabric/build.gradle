@@ -96,6 +96,15 @@ loom {
             vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.file("gametest/report.xml").get().asFile}"
             runDir "build/gametest"
         }
+        // ./gradlew :Fabric:runClientCheck opens a game window, plays through the pet screens in a new world, saves
+        // screenshots to build/clientcheck/screenshots and exits non-zero on failure.
+        clientCheck {
+            client()
+            setConfigName("Fabric Client Check")
+            source sourceSets.gametest
+            vmArg "-Dwaystonespetsaddon.clientcheck=true"
+            runDir "build/clientcheck"
+        }
     }
 }
 
@@ -103,6 +112,16 @@ loom {
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGametest' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
+}
+tasks.matching { it.name == 'runClientCheck' }.configureEach {
+    doFirst {
+        def dir = file('build/clientcheck')
+        project.delete(new File(dir, 'saves'), new File(dir, 'config'), new File(dir, 'screenshots'))
+        dir.mkdirs()
+        // Skips the first-launch screens, keeps the game going while its window is in the background, and mutes it.
+        new File(dir, 'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\njoinedFirstServer:true\n' +
+                'pauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+    }
 }
 
 afterEvaluate {

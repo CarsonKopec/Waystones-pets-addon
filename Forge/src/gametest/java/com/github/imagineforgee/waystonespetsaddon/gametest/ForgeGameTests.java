@@ -10,6 +10,7 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ConfigTracker;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.gametest.GameTestHolder;
 
 import java.io.IOException;
@@ -30,6 +31,10 @@ public class ForgeGameTests extends PetTeleportGameTests {
     static {
         // Static, because the test registry constructs this class again later, outside mod loading.
         MinecraftForge.EVENT_BUS.addListener(ForgeGameTests::loadServerConfigs);
+
+        if (FMLEnvironment.dist.isClient()) {
+            PetScreensClientCheck.startIfRequested();
+        }
     }
 
     @Override
