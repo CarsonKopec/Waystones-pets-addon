@@ -56,6 +56,14 @@ neoForge {
             gameDirectory = project.file('build/gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
+
+        // ./gradlew :NeoForge:runClientCheck opens a game window, plays through the pet screens in a new world, saves
+        // screenshots to build/clientcheck/screenshots and exits non-zero on failure.
+        clientCheck {
+            client()
+            gameDirectory = project.file('build/clientcheck')
+            systemProperty 'waystonespetsaddon.clientcheck', 'true'
+        }
     }
 }
 
@@ -63,6 +71,16 @@ neoForge {
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
+}
+tasks.matching { it.name == 'runClientCheck' }.configureEach {
+    doFirst {
+        def dir = file('build/clientcheck')
+        project.delete(new File(dir, 'saves'), new File(dir, 'config'), new File(dir, 'screenshots'))
+        dir.mkdirs()
+        // Skips the first-launch screens, keeps the game going while its window is in the background, and mutes it.
+        new File(dir, 'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\njoinedFirstServer:true\n' +
+                'pauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+    }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
