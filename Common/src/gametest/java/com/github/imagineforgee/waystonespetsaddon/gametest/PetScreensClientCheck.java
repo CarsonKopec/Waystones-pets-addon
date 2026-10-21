@@ -13,6 +13,7 @@ import net.blay09.mods.waystones.api.WaystonesAPI;
 import net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreenBase;
 import net.blay09.mods.waystones.client.gui.widget.WaystoneButton;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.MouseHandler;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -44,6 +45,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -109,7 +111,16 @@ public final class PetScreensClientCheck {
 
     private static void check() {
         waitUntil("the game to start", () -> Minecraft.getInstance() != null);
-        waitForScreen(TitleScreen.class);
+        // In dev, NeoForge lists other mods' metadata warnings on a screen of its own before the title screen. Players
+        // never see it; it's closed the way a developer would.
+        waitUntil("the title screen", () -> onClient(client -> {
+            Screen screen = client.gui.screen();
+            if (screen != null && screen.getClass().getSimpleName().equals("LoadingErrorScreen")) {
+                LOGGER.info("Closing the mod loading warnings screen");
+                screen.onClose();
+            }
+            return client.gui.screen() instanceof TitleScreen;
+        }));
         createFlatWorld();
 
         MinecraftServer server = onClient(Minecraft::getSingleplayerServer);
@@ -368,8 +379,8 @@ public final class PetScreensClientCheck {
                     .map(child -> holds(child, widget) ? "" : child.getClass().getName())
                     .orElse("nothing");
             long window = client.getWindow().handle();
-            client.mouseHandler.onButton(window, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0), InputConstants.PRESS);
-            client.mouseHandler.onButton(window, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0), InputConstants.RELEASE);
+            callMouseHandler(client, "onButton", window, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0), InputConstants.PRESS);
+            callMouseHandler(client, "onButton", window, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0), InputConstants.RELEASE);
             return under;
         });
         check(target.isEmpty(), "A click on " + widget.getClass().getSimpleName() + " at " + bounds(widget) + " went to " + target);
@@ -380,9 +391,9 @@ public final class PetScreensClientCheck {
     private static void moveMouseTo(AbstractWidget widget) {
         onClient(client -> {
             Window window = client.getWindow();
-            client.mouseHandler.onMove(window.handle(),
+            callMouseHandler(client, "onMove", window.handle(),
                     (widget.getX() + widget.getWidth() / 2.0) * window.getScreenWidth() / window.getGuiScaledWidth(),
-                    (widget.getY() + widget.getHeight() / 2.0) * window.getScreenHeight() / window.getGuiScaledHeight(), 0, 0);
+                    (widget.getY() + widget.getHeight() / 2.0) * window.getScreenHeight() / window.getGuiScaledHeight(), 0.0, 0.0);
             return null;
         });
         pause(150);
@@ -391,10 +402,26 @@ public final class PetScreensClientCheck {
     /** Moves the mouse into the corner, off the widgets and away from the pet models, which turn to follow it. */
     private static void moveMouseAway() {
         onClient(client -> {
-            client.mouseHandler.onMove(client.getWindow().handle(), 0, 0, 0, 0);
+            callMouseHandler(client, "onMove", client.getWindow().handle(), 0.0, 0.0, 0.0, 0.0);
             return null;
         });
         pause(150);
+    }
+
+    /** The mouse handler's input callbacks are private, as only the window system calls them. */
+    private static void callMouseHandler(Minecraft client, String name, Object... arguments) {
+        for (Method method : MouseHandler.class.getDeclaredMethods()) {
+            if (method.getName().equals(name) && method.getParameterCount() == arguments.length) {
+                try {
+                    method.setAccessible(true);
+                    method.invoke(client.mouseHandler, arguments);
+                    return;
+                } catch (ReflectiveOperationException e) {
+                    throw new AssertionError("Could not call MouseHandler." + name, e);
+                }
+            }
+        }
+        throw new AssertionError("MouseHandler has no " + name + " taking " + arguments.length + " arguments");
     }
 
     private static void screenshot(String name) {
