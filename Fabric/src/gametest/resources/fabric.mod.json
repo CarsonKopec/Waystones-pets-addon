@@ -8,6 +8,9 @@
   "entrypoints": {
     "fabric-gametest": [
       "com.github.imagineforgee.waystonespetsaddon.gametest.PetTeleportGameTests"
+    ],
+    "client": [
+      "com.github.imagineforgee.waystonespetsaddon.gametest.FabricClientCheck"
     ]
   },
   "depends": {

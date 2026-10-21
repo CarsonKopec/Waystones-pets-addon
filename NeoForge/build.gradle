@@ -43,12 +43,30 @@ runs {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         modSource project.sourceSets.gametest
     }
+
+    // ./gradlew :NeoForge:runClientCheck opens a game window, plays through the pet screens in a new world, saves
+    // screenshots to runs/clientCheck/screenshots and exits non-zero on failure.
+    clientCheck {
+        runType 'client'
+        systemProperty 'waystonespetsaddon.clientcheck', 'true'
+        modSource project.sourceSets.gametest
+    }
 }
 
 // Each game test run starts from a fresh world and config, so nothing left by a failed run, or by a run for another
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     doFirst { project.delete(file('runs/gameTestServer/world'), file('runs/gameTestServer/config')) }
+}
+tasks.matching { it.name == 'runClientCheck' }.configureEach {
+    doFirst {
+        def dir = file('runs/clientCheck')
+        project.delete(new File(dir, 'saves'), new File(dir, 'config'), new File(dir, 'screenshots'))
+        dir.mkdirs()
+        // Skips the first-launch screens, keeps the game going while its window is in the background, and mutes it.
+        new File(dir, 'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\njoinedFirstServer:true\n' +
+                'pauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+    }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
