@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -31,6 +32,10 @@ public class NeoForgeGameTests {
         // NeoForge only sends mod packets over connections that negotiated them, which vanilla's mock player never
         // does, so logging one in failed as soon as Balm synced Waystones' config to it.
         PetTeleportGameTests.mockPlayerFactory = NeoForgeGameTests::makeMockPlayer;
+
+        if (FMLEnvironment.getDist().isClient()) {
+            PetScreensClientCheck.startIfRequested();
+        }
     }
 
     /** Vanilla's makeMockServerPlayerInLevel, with a connection NeoForge treats as negotiated. */
