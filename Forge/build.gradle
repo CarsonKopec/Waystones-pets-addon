@@ -39,7 +39,14 @@ minecraft {
         configureEach {
             workingDir = layout.projectDirectory.dir('run')
         }
-        register('client')
+        register('client') {
+            // ./gradlew :Forge:runClientCheck (runGametestClient) opens a game window, plays through the pet screens in
+            // a new world, saves screenshots to build/clientcheck/screenshots and exits non-zero on failure.
+            with(sourceSets.gametest) {
+                workingDir = layout.projectDirectory.dir('build/clientcheck')
+                systemProperty 'waystonespetsaddon.clientcheck', 'true'
+            }
+        }
         register('server') {
             args '--nogui'
         }
@@ -56,6 +63,21 @@ minecraft {
 // Minecraft version, can affect it.
 tasks.matching { it.name == 'runGametestGameTestServer' }.configureEach {
     doFirst { project.delete(file('build/gametest/world'), file('build/gametest/config')) }
+}
+tasks.matching { it.name == 'runGametestClient' }.configureEach {
+    doFirst {
+        def dir = file('build/clientcheck')
+        project.delete(new File(dir, 'saves'), new File(dir, 'config'), new File(dir, 'screenshots'))
+        dir.mkdirs()
+        // Skips the first-launch screens, keeps the game going while its window is in the background, and mutes it.
+        new File(dir, 'options.txt').text = 'onboardAccessibility:false\ntutorialStep:none\njoinedFirstServer:true\n' +
+                'pauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+    }
+}
+tasks.register('runClientCheck') {
+    group = 'verification'
+    description = 'Plays through the pet screens in a real client.'
+    dependsOn 'runGametestClient'
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
@@ -76,6 +98,11 @@ dependencies {
         changing = balm_forge_version.endsWith("SNAPSHOT")
     }
     implementation("net.blay09.mods:waystones-forge:${waystones_version}") {
+        transitive = false
+    }
+    // Balm's Forge jar uses Kuma without bundling it, and its POM is left out above: without this, a dev client
+    // crashes as soon as it opens a waystone. Players have Kuma installed alongside Balm.
+    runtimeOnly("net.blay09.mods:kuma-api-forge:${kuma_version}") {
         transitive = false
     }
     compileOnly project(":Common")
